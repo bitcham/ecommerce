@@ -6,6 +6,8 @@ build/
 !**/src/test/**/build/
 .claude
 CLAUDE.md
+LOGGING_GUIDELINES.md
+MockMvcTester-Testing-Guidelines.md
 
 
 ### STS ###

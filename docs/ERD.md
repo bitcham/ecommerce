@@ -120,9 +120,6 @@ erDiagram
         varchar phone
         varchar role
         varchar status
-        boolean email_verified
-        timestamp email_verified_at
-        timestamp last_login_at
         varchar billing_street_address
         varchar billing_city
         varchar billing_postal_code
@@ -595,11 +592,17 @@ enum class MemberRole {
 #### MemberStatus
 ```kotlin
 enum class MemberStatus {
-    ACTIVE,
-    INACTIVE,
-    PENDING
+    ACTIVE,    // Email verified, account active
+    INACTIVE,  // Account deactivated
+    PENDING    // Awaiting email verification
 }
 ```
+
+**Email Verification:**
+- Email verification is handled through `MemberStatus`
+- New members start with status = `PENDING`
+- Upon email verification, status transitions to `ACTIVE`
+- No separate `email_verified` or `email_verified_at` fields needed
 
 ### Value Objects
 

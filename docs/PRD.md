@@ -125,11 +125,16 @@ Organized by **Domain-Driven Design Bounded Contexts**:
 
 #### Authentication & Authorization
 - **UM-001:** User registration with email and password
-- **UM-002:** Email verification
+- **UM-002:** Email verification (implemented via MemberStatus: PENDING → ACTIVE)
 - **UM-003:** User login with JWT token generation
 - **UM-004:** Password reset functionality
-- **UM-005:** Role-based access control (Customer, Admin, Super Admin)
+- **UM-005:** Role-based access control (Customer, Admin, Seller)
 - **UM-006:** OAuth2 social login (Google, Facebook) - Phase 3
+
+**Note:** Email verification is handled through `MemberStatus`:
+- New registrations default to `PENDING` status
+- Email verification transitions status to `ACTIVE`
+- No separate `email_verified` or `last_login_at` fields
 
 #### User Profile
 - **UM-007:** View and update user profile (name, email, phone)
@@ -653,18 +658,26 @@ Organized by **Domain-Driven Design Bounded Contexts**:
 - updatedAt: Timestamp
 ```
 
-#### User
+#### Member
 ```
-- id: Long
-- email: Email (Value Object)
-- password: String (hashed)
+- id: UUID
+- email: String
+- passwordHash: String (BCrypt hashed)
 - firstName: String
 - lastName: String
-- role: UserRole (CUSTOMER, ADMIN, SUPER_ADMIN)
-- status: UserStatus (ACTIVE, INACTIVE, SUSPENDED)
-- addresses: List<Address>
-- createdAt: Timestamp
+- phone: String (optional)
+- role: MemberRole (CUSTOMER, ADMIN, SELLER)
+- status: MemberStatus (PENDING, ACTIVE, INACTIVE)
+- billingAddress: Address (embedded, optional)
+- deliveryAddress: Address (embedded, optional)
+- createdAt: LocalDateTime
+- updatedAt: LocalDateTime
 ```
+
+**Status Flow:**
+- PENDING: New registration, awaiting email verification
+- ACTIVE: Email verified, account fully functional
+- INACTIVE: Account deactivated
 
 #### Order (Aggregate Root)
 ```

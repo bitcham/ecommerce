@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: ecommerce
+
+  # JPA/Hibernate Configuration
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        dialect: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: validate
+
+  # H2 Database Configuration
+  datasource:
+    url: jdbc:h2:mem:ecommerce
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+
+  # H2 Console Configuration
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  # Flyway Configuration
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: on_param
+    include-exception: false
+
+# Logging Configuration
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+

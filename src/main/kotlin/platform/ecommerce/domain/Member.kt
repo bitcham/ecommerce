@@ -56,4 +56,22 @@ class Member(
     var id: UUID? = null
         protected set
 
+    companion object {
+        fun register(
+            email: String,
+            passwordHash: String,
+            firstName: String,
+            lastName: String,
+            phone: String? = null
+        ): Member {
+            return Member(
+                email = email,
+                passwordHash = passwordHash,
+                firstName = firstName,
+                lastName = lastName,
+                phone = phone
+            )
+        }
+    }
+
 }
