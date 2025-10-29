@@ -1,6 +1,6 @@
 package platform.ecommerce.exception
 
-class DuplicateEmailException(
+class MemberNotFoundException(
     message: String? = null,
     cause: Throwable? = null
 ) : RuntimeException(message, cause) {

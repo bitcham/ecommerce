@@ -33,9 +33,11 @@ dependencies {
     implementation("org.flywaydb:flyway-core")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13")
+    implementation("io.github.oshai:kotlin-logging-jvm:7.0.3")
 
     // MapStruct
     implementation("org.mapstruct:mapstruct:1.6.3")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
     kapt("org.mapstruct:mapstruct-processor:1.6.3")
 
     runtimeOnly("com.h2database:h2")
@@ -47,6 +49,10 @@ dependencies {
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
     testImplementation("org.testcontainers:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    implementation("io.jsonwebtoken:jjwt-api:0.13.0")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
 }
 
 kotlin {

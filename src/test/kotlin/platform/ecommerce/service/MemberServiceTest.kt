@@ -17,7 +17,10 @@ import platform.ecommerce.dto.request.MemberRegister
 import platform.ecommerce.enums.MemberRole
 import platform.ecommerce.enums.MemberStatus
 import platform.ecommerce.exception.DuplicateEmailException
+import platform.ecommerce.exception.MemberNotFoundException
+import platform.ecommerce.fixture.MemberFixture
 import platform.ecommerce.repository.MemberRepository
+import java.util.*
 
 @ExtendWith(MockitoExtension::class)
 class MemberServiceTest {
@@ -85,6 +88,46 @@ class MemberServiceTest {
         verify(memberRepository).existsByEmail(request.email)
         verify(passwordEncoder, never()).encode(any())
         verify(memberRepository, never()).save(any())
+    }
+
+    @Test
+    fun `findByEmail should return member when member exists`() {
+        // Given
+        val email = "test@example.com"
+        val member = MemberFixture.createMember(
+            email = email,
+            passwordHash = "encodedPassword",
+            firstName = "John",
+            lastName = "Doe"
+        )
+
+        whenever(memberRepository.findByEmail(email)).thenReturn(member)
+
+        // When
+        val result = memberService.findByEmail(email)
+
+        // Then
+        assertThat(result).isNotNull
+        assertThat(result.email).isEqualTo(email)
+        assertThat(result.firstName).isEqualTo("John")
+        assertThat(result.lastName).isEqualTo("Doe")
+
+        verify(memberRepository).findByEmail(email)
+    }
+
+    @Test
+    fun `findByEmail should throw MemberNotFoundException when member does not exist`() {
+        // Given
+        val email = "notfound@example.com"
+
+        whenever(memberRepository.findByEmail(email)).thenReturn(null)
+
+        // When & Then
+        assertThatThrownBy { memberService.findByEmail(email) }
+            .isInstanceOf(MemberNotFoundException::class.java)
+            .hasMessageContaining("Member not found with email: $email")
+
+        verify(memberRepository).findByEmail(email)
     }
 
 }

@@ -1,6 +1,6 @@
 package platform.ecommerce.exception
 
-class DuplicateEmailException(
+class InvalidCredentialsException (
     message: String? = null,
     cause: Throwable? = null
 ) : RuntimeException(message, cause) {

@@ -43,7 +43,27 @@ server:
 # Logging Configuration
 logging:
   level:
+    platform.ecommerce: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# Springdoc OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+  show-actuator: false
+
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:your-secret-key-here-change-in-production}
+  expiration: 86400000 # 24 hours in milliseconds
+  refresh-expiration: 604800000 # 7 days in milliseconds
+
 

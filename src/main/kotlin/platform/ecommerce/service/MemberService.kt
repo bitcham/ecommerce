@@ -5,7 +5,10 @@ import org.springframework.stereotype.Service
 import platform.ecommerce.domain.Member
 import platform.ecommerce.dto.request.MemberRegister
 import platform.ecommerce.exception.DuplicateEmailException
+import platform.ecommerce.exception.MemberNotFoundException
 import platform.ecommerce.repository.MemberRepository
+import platform.ecommerce.utils.Logger
+import platform.ecommerce.utils.Logger.Companion.logger
 
 @Service
 class MemberService(
@@ -23,12 +26,21 @@ class MemberService(
             phone = request.phone
         )
 
+        logger.debug{ "member created: memberId = ${member.id}" }
+
         return memberRepository.save(member)
+    }
+
+    fun findByEmail(email: String): Member {
+        logger.debug { "Finding member by email: $email" }
+
+        return memberRepository.findByEmail(email)
+            ?: throw MemberNotFoundException("Member not found with email: $email")
     }
 
     private fun isDuplicatedEmail(request: MemberRegister) {
         if (memberRepository.existsByEmail(request.email)) {
-            throw DuplicateEmailException(request.email)
+            throw DuplicateEmailException("Email already exists: ${request.email}")
         }
     }
 }

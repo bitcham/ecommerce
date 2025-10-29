@@ -7,8 +7,10 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
+import platform.ecommerce.dto.request.LoginRequest
 import platform.ecommerce.dto.request.MemberRegister
 import platform.ecommerce.dto.response.ApiResponse
+import platform.ecommerce.dto.response.LoginResponse
 import platform.ecommerce.dto.response.MemberResponse
 import platform.ecommerce.service.AuthService
 
@@ -18,6 +20,7 @@ import platform.ecommerce.service.AuthService
 class AuthController(
     private val authService: AuthService
 ) {
+
 
     @Operation(summary = "Register a new member", description = "Creates a new member with PENDING status")
     @ApiResponses(
@@ -30,6 +33,19 @@ class AuthController(
     fun register(@Valid @RequestBody request: MemberRegister): ApiResponse<MemberResponse> {
         val registered = authService.register(request)
         return ApiResponse.success(registered, "Member registered successfully")
+    }
+
+    @Operation(summary = "Login a member", description = "Logging in")
+    @ApiResponses(
+        SwaggerResponse(responseCode = "200", description = "Successfully logged in"),
+        SwaggerResponse(responseCode = "400", description = "Invalid input")
+    )
+    @PostMapping("/login")
+    @ResponseStatus(HttpStatus.OK)
+    fun login(@Valid @RequestBody request: LoginRequest): ApiResponse<LoginResponse>{
+        val data = authService.login(request)
+        val response = ApiResponse.success(data, "Successfully logged in")
+        return response
     }
 
 

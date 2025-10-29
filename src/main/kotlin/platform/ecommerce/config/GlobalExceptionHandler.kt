@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import platform.ecommerce.dto.response.ApiResponse
 import platform.ecommerce.exception.DuplicateEmailException
+import platform.ecommerce.exception.InvalidCredentialsException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -20,6 +21,14 @@ class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response)
     }
 
+    @ExceptionHandler(InvalidCredentialsException::class)
+    fun handleInvalidCredentialsException(ex: InvalidCredentialsException): ResponseEntity<ApiResponse<Nothing>> {
+        val response = ApiResponse.error<Nothing>(
+            message = ex.message ?: "Invalid credentials"
+        )
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response)
+    }
+
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleIllegalArgumentException(ex: IllegalArgumentException): ResponseEntity<ApiResponse<Nothing>> {
         val response = ApiResponse.error<Nothing>(
@@ -30,9 +39,24 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException::class)
     fun handleHttpMessageNotReadableException(ex: HttpMessageNotReadableException): ResponseEntity<ApiResponse<Nothing>> {
-        val response = ApiResponse.error<Nothing>(
-            message = "Malformed JSON request"
-        )
+        val errorMessage = ex.cause?.message ?: ex.message ?: "Invalid request body"
+
+        val message = when {
+            errorMessage.contains("missing", ignoreCase = true) ||
+            errorMessage.contains("required", ignoreCase = true) ||
+            errorMessage.contains("Instantiation", ignoreCase = true) -> {
+                "Missing required fields in request body"
+            }
+            errorMessage.contains("JSON", ignoreCase = true) ||
+            errorMessage.contains("parse", ignoreCase = true) -> {
+                "Malformed JSON request"
+            }
+            else -> {
+                "Invalid request body"
+            }
+        }
+
+        val response = ApiResponse.error<Nothing>(message = message)
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response)
     }
 
