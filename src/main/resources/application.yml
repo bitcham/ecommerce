@@ -2,33 +2,46 @@ spring:
   application:
     name: ecommerce
 
+  # Profile-specific configurations (use application-{profile}.yml for overrides)
+  profiles:
+    active: dev
+
   # JPA/Hibernate Configuration
   jpa:
     properties:
       hibernate:
         format_sql: true
         use_sql_comments: true
-        dialect: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: validate
-
-  # H2 Database Configuration
-  datasource:
-    url: jdbc:h2:mem:ecommerce
-    driverClassName: org.h2.Driver
-    username: sa
-    password:
-
-  # H2 Console Configuration
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+    show-sql: false
 
   # Flyway Configuration
   flyway:
     enabled: true
     baseline-on-migrate: true
+
+  # Mail Configuration (Mailpit for development)
+  mail:
+    host: localhost
+    port: 1026
+    username:
+    password:
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+        debug: true
+
+# Application Configuration
+app:
+  mail:
+    from: noreply@ecommerce.platform
+  url: http://localhost:8080
+  email-verification:
+    expiration-hours: 24
 
 server:
   port: 8080

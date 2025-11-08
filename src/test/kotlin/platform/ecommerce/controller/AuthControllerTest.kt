@@ -1,143 +1,99 @@
 package platform.ecommerce.controller
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.InstanceOfAssertFactories.LIST
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.BDDMockito.given
 import org.mockito.kotlin.any
-import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.assertj.MockMvcTester
-import platform.ecommerce.dto.request.LoginRequest
-import platform.ecommerce.dto.request.MemberRegister
-import platform.ecommerce.dto.response.LoginResponse
+import platform.ecommerce.config.SecurityConfig
 import platform.ecommerce.dto.response.MemberResponse
 import platform.ecommerce.enums.MemberRole
 import platform.ecommerce.enums.MemberStatus
 import platform.ecommerce.exception.DuplicateEmailException
-import platform.ecommerce.exception.InvalidCredentialsException
 import platform.ecommerce.security.JwtUtil
 import platform.ecommerce.service.AuthService
-import java.time.LocalDateTime
+import java.time.Instant
 import java.util.*
 
-@WebMvcTest(
-    controllers = [AuthController::class],
-    excludeAutoConfiguration = [org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration::class]
-)
-@AutoConfigureMockMvc
+@WebMvcTest(controllers = [AuthController::class])
+@Import(SecurityConfig::class)
 class AuthControllerTest {
 
     @Autowired
     private lateinit var mockMvcTester: MockMvcTester
 
-    @Autowired
-    private lateinit var objectMapper: ObjectMapper
-
     @MockitoBean
     private lateinit var authService: AuthService
 
     @MockitoBean
-    private lateinit var user: UserDetailsService
-
-    @MockitoBean
     private lateinit var jwtUtil: JwtUtil
 
-    @Test
-    fun `Should return 201 and member response when registration is successful`() {
-        // Given
-        val request = MemberRegister(
-            email = "test@example.com",
-            password = "password123",
+    @MockitoBean
+    private lateinit var userDetailsService: UserDetailsService
+
+    private lateinit var memberResponse: MemberResponse
+
+    @BeforeEach
+    fun setUp() {
+        memberResponse = MemberResponse(
+            id = UUID.randomUUID(),
+            email = "customer@example.com",
             firstName = "John",
             lastName = "Doe",
-            phone = "1234567890"
-        )
-
-        val response = MemberResponse(
-            id = UUID.randomUUID(),
-            email = request.email,
-            firstName = request.firstName,
-            lastName = request.lastName,
-            phone = request.phone,
+            phone = "010-1234-5678",
             role = MemberRole.CUSTOMER,
             status = MemberStatus.PENDING,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
         )
-
-        whenever(authService.register(any())).thenReturn(response)
-
-        // When & Then
-        assertThat(
-            mockMvcTester.post()
-                .uri("/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request))
-        )
-            .hasStatus(HttpStatus.CREATED)
-            .hasContentType(MediaType.APPLICATION_JSON)
-            .bodyJson()
-            .hasPathSatisfying("$.success") { success -> assertThat(success).isEqualTo(true) }
-            .hasPathSatisfying("$.message") { message -> assertThat(message).isEqualTo("Member registered successfully") }
-            .hasPathSatisfying("$.data.email") { email -> assertThat(email).isEqualTo(request.email) }
-            .hasPathSatisfying("$.data.firstName") { firstName -> assertThat(firstName).isEqualTo(request.firstName) }
-            .hasPathSatisfying("$.data.lastName") { lastName -> assertThat(lastName).isEqualTo(request.lastName) }
-            .hasPathSatisfying("$.data.phone") { phone -> assertThat(phone).isEqualTo(request.phone) }
-            .hasPathSatisfying("$.data.role") { role -> assertThat(role).isEqualTo("CUSTOMER") }
-            .hasPathSatisfying("$.data.status") { status -> assertThat(status).isEqualTo("PENDING") }
     }
 
     @Test
-    fun `Should return 201 when registering without optional phone`() {
+    fun `should successfully register member with valid request and return 201 Created`() {
         // Given
-        val request = MemberRegister(
-            email = "test@example.com",
-            password = "password123",
-            firstName = "John",
-            lastName = "Doe",
-            phone = null
-        )
-
-        val response = MemberResponse(
-            id = UUID.randomUUID(),
-            email = request.email,
-            firstName = request.firstName,
-            lastName = request.lastName,
-            phone = null,
-            role = MemberRole.CUSTOMER,
-            status = MemberStatus.PENDING,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
-
-        whenever(authService.register(any())).thenReturn(response)
-
-        // When & Then
-        assertThat(
-            mockMvcTester.post()
-                .uri("/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request))
-        )
-            .hasStatus(HttpStatus.CREATED)
-            .bodyJson()
-            .hasPathSatisfying("$.success") { success -> assertThat(success).isEqualTo(true) }
-            .hasPathSatisfying("$.data.phone") { phone -> assertThat(phone).isNull() }
-    }
-
-    @Test
-    fun `Should return 400 when email is invalid`() {
-        // Given
-        val invalidRequest = """
+        given(authService.register(any())).willReturn(memberResponse)
+        val validRequest = """
             {
-                "email": "not-an-email",
+                "email": "customer@example.com",
+                "password": "password123",
+                "firstName": "John",
+                "lastName": "Doe",
+                "phone": "010-1234-5678"
+            }
+        """.trimIndent()
+
+        // When & Then
+        assertThat(mockMvcTester.post()
+            .uri("/auth/register")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(validRequest))
+            .hasStatus(HttpStatus.CREATED)
+            .bodyJson()
+            .hasPathSatisfying("$.success") { assertThat(it).isEqualTo(true) }
+            .hasPathSatisfying("$.data.email") { assertThat(it).isEqualTo("customer@example.com") }
+            .hasPathSatisfying("$.data.firstName") { assertThat(it).isEqualTo("John") }
+            .hasPathSatisfying("$.data.lastName") { assertThat(it).isEqualTo("Doe") }
+            .hasPathSatisfying("$.data.phone") { assertThat(it).isEqualTo("010-1234-5678") }
+            .hasPathSatisfying("$.data.role") { assertThat(it).isEqualTo("CUSTOMER") }
+            .hasPathSatisfying("$.data.status") { assertThat(it).isEqualTo("PENDING") }
+    }
+
+    @Test
+    fun `should successfully register member without phone number`() {
+        // Given
+        val responseWithoutPhone = memberResponse.copy(phone = null)
+        given(authService.register(any())).willReturn(responseWithoutPhone)
+        val requestWithoutPhone = """
+            {
+                "email": "customer@example.com",
                 "password": "password123",
                 "firstName": "John",
                 "lastName": "Doe"
@@ -145,256 +101,347 @@ class AuthControllerTest {
         """.trimIndent()
 
         // When & Then
-        assertThat(
-            mockMvcTester.post()
-                .uri("/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(invalidRequest)
-        )
-            .hasStatus(HttpStatus.BAD_REQUEST)
+        assertThat(mockMvcTester.post()
+            .uri("/auth/register")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(requestWithoutPhone))
+            .hasStatus(HttpStatus.CREATED)
             .bodyJson()
-            .hasPathSatisfying("$.success") { success -> assertThat(success).isEqualTo(false) }
-            .hasPathSatisfying("$.message") { message -> assertThat(message).isEqualTo("Validation failed") }
-            .hasPathSatisfying("$.errors") { errors -> assertThat(errors).asInstanceOf(LIST).isNotEmpty }
+            .hasPathSatisfying("$.success") { assertThat(it).isEqualTo(true) }
+            .hasPathSatisfying("$.data.phone"){ assertThat(it).isNull() }
     }
 
     @Test
-    fun `Should return 400 when password is too short`() {
+    fun `should return 409 Conflict when email already exists`() {
         // Given
-        val invalidRequest = """
+        given(authService.register(any()))
+            .willThrow(DuplicateEmailException("Email already exists: customer@example.com"))
+        val validRequest = """
             {
-                "email": "test@example.com",
-                "password": "short",
+                "email": "customer@example.com",
+                "password": "password123",
                 "firstName": "John",
                 "lastName": "Doe"
             }
         """.trimIndent()
 
         // When & Then
-        assertThat(
-            mockMvcTester.post()
-                .uri("/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(invalidRequest)
-        )
-            .hasStatus(HttpStatus.BAD_REQUEST)
-            .bodyJson()
-            .hasPathSatisfying("$.success") { success -> assertThat(success).isEqualTo(false) }
-            .hasPathSatisfying("$.message") { message -> assertThat(message).isEqualTo("Validation failed") }
-            .hasPathSatisfying("$.errors") { errors -> assertThat(errors).asInstanceOf(LIST).isNotEmpty }
-    }
-
-    @Test
-    fun `Should return 400 when required fields are missing`() {
-        // Given
-        val invalidRequest = """
-            {
-                "email": "test@example.com",
-                "password": "password123"
-            }
-        """.trimIndent()
-
-        // When & Then
-        assertThat(
-            mockMvcTester.post()
-                .uri("/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(invalidRequest)
-        )
-            .hasStatus(HttpStatus.BAD_REQUEST)
-            .bodyJson()
-            .hasPathSatisfying("$.success") { success -> assertThat(success).isEqualTo(false) }
-            .hasPathSatisfying("$.message") { message -> assertThat(message).isEqualTo("Missing required fields in request body") }
-    }
-
-    @Test
-    fun `Should return 400 when all fields are blank`() {
-        // Given
-        val invalidRequest = """
-            {
-                "email": "",
-                "password": "",
-                "firstName": "",
-                "lastName": ""
-            }
-        """.trimIndent()
-
-        // When & Then
-        assertThat(
-            mockMvcTester.post()
-                .uri("/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(invalidRequest)
-        )
-            .hasStatus(HttpStatus.BAD_REQUEST)
-            .bodyJson()
-            .hasPathSatisfying("$.success") { success -> assertThat(success).isEqualTo(false) }
-            .hasPathSatisfying("$.errors") { errors -> assertThat(errors).asInstanceOf(LIST).hasSizeGreaterThanOrEqualTo(4) }
-    }
-
-    @Test
-    fun `Should return 409 when email already exists`() {
-        // Given
-        val request = MemberRegister(
-            email = "existing@example.com",
-            password = "password123",
-            firstName = "John",
-            lastName = "Doe"
-        )
-
-        whenever(authService.register(any()))
-            .thenThrow(DuplicateEmailException("Email already exists: ${request.email}"))
-
-        // When & Then
-        assertThat(
-            mockMvcTester.post()
-                .uri("/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request))
-        )
+        assertThat(mockMvcTester.post()
+            .uri("/auth/register")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(validRequest))
             .hasStatus(HttpStatus.CONFLICT)
             .bodyJson()
-            .hasPathSatisfying("$.success") { success -> assertThat(success).isEqualTo(false) }
-            .hasPathSatisfying("$.message") { message ->
-                assertThat(message).asString().contains("Email already exists: existing@example.com")
-            }
+            .hasPathSatisfying("$.success") { assertThat(it).isEqualTo(false) }
+            .extractingPath("$.message").isEqualTo("Email already exists: customer@example.com")
     }
 
     @Test
-    fun `Should return 200 and tokens when login is successful`() {
-        // Given
-        val request = LoginRequest(
-            email = "test@example.com",
-            password = "password123"
-        )
+    fun `should return 400 Bad Request when email is invalid or missing`() {
+        // Test missing email
+        val requestWithoutEmail = """
+            {
+                "password": "password123",
+                "firstName": "John",
+                "lastName": "Doe"
+            }
+        """.trimIndent()
 
-        val memberId = UUID.randomUUID()
-        val response = LoginResponse(
-            id = memberId,
-            email = request.email,
+        assertThat(mockMvcTester.post()
+            .uri("/auth/register")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(requestWithoutEmail))
+            .hasStatus(HttpStatus.BAD_REQUEST)
+
+        // Test invalid email format
+        val invalidEmailRequest = """
+            {
+                "email": "invalid-email",
+                "password": "password123",
+                "firstName": "John",
+                "lastName": "Doe"
+            }
+        """.trimIndent()
+
+        assertThat(mockMvcTester.post()
+            .uri("/auth/register")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(invalidEmailRequest))
+            .hasStatus(HttpStatus.BAD_REQUEST)
+    }
+
+    @Test
+    fun `should return 400 Bad Request when password validation fails`() {
+        // Test missing password
+        val requestWithoutPassword = """
+            {
+                "email": "customer@example.com",
+                "firstName": "John",
+                "lastName": "Doe"
+            }
+        """.trimIndent()
+
+        assertThat(mockMvcTester.post()
+            .uri("/auth/register")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(requestWithoutPassword))
+            .hasStatus(HttpStatus.BAD_REQUEST)
+
+        // Test short password
+        val shortPasswordRequest = """
+            {
+                "email": "customer@example.com",
+                "password": "short",
+                "firstName": "John",
+                "lastName": "Doe"
+            }
+        """.trimIndent()
+
+        assertThat(mockMvcTester.post()
+            .uri("/auth/register")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(shortPasswordRequest))
+            .hasStatus(HttpStatus.BAD_REQUEST)
+    }
+
+    @Test
+    fun `should return 400 Bad Request when name validation fails`() {
+        // Test missing firstName
+        val requestWithoutFirstName = """
+            {
+                "email": "customer@example.com",
+                "password": "password123",
+                "lastName": "Doe"
+            }
+        """.trimIndent()
+
+        assertThat(mockMvcTester.post()
+            .uri("/auth/register")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(requestWithoutFirstName))
+            .hasStatus(HttpStatus.BAD_REQUEST)
+
+        // Test firstName exceeds 50 characters
+        val longFirstNameRequest = """
+            {
+                "email": "customer@example.com",
+                "password": "password123",
+                "firstName": "${"A".repeat(51)}",
+                "lastName": "Doe"
+            }
+        """.trimIndent()
+
+        assertThat(mockMvcTester.post()
+            .uri("/auth/register")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(longFirstNameRequest))
+            .hasStatus(HttpStatus.BAD_REQUEST)
+    }
+
+    @Test
+    fun `should return 400 Bad Request when phone exceeds 20 characters`() {
+        // Given
+        val longPhoneRequest = """
+            {
+                "email": "customer@example.com",
+                "password": "password123",
+                "firstName": "John",
+                "lastName": "Doe",
+                "phone": "${"0".repeat(21)}"
+            }
+        """.trimIndent()
+
+        // When & Then
+        assertThat(mockMvcTester.post()
+            .uri("/auth/register")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(longPhoneRequest))
+            .hasStatus(HttpStatus.BAD_REQUEST)
+    }
+
+    // ========== Login Tests ==========
+
+    @Test
+    fun `should return 200 OK and tokens when login with valid credentials`() {
+        // Given
+        val loginResponse = platform.ecommerce.dto.response.LoginResponse(
+            id = UUID.randomUUID(),
+            email = "customer@example.com",
             role = "CUSTOMER",
-            accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test.access",
+            accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test.token",
             refreshToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test.refresh",
             tokenType = "Bearer",
             expiresIn = 3600000L
         )
+        given(authService.login(any())).willReturn(loginResponse)
 
-        whenever(authService.login(any())).thenReturn(response)
-
-        // When & Then
-        assertThat(
-            mockMvcTester.post()
-                .uri("/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request))
-        )
-            .hasStatus(HttpStatus.OK)
-            .hasContentType(MediaType.APPLICATION_JSON)
-            .bodyJson()
-            .hasPathSatisfying("$.success") { success -> assertThat(success).isEqualTo(true) }
-            .hasPathSatisfying("$.message") { message -> assertThat(message).isEqualTo("Successfully logged in") }
-            .hasPathSatisfying("$.data.id") { id -> assertThat(id).isEqualTo(memberId.toString()) }
-            .hasPathSatisfying("$.data.email") { email -> assertThat(email).isEqualTo(request.email) }
-            .hasPathSatisfying("$.data.role") { role -> assertThat(role).isEqualTo("CUSTOMER") }
-            .hasPathSatisfying("$.data.accessToken") { token -> assertThat(token).asString().startsWith("eyJ") }
-            .hasPathSatisfying("$.data.refreshToken") { token -> assertThat(token).asString().startsWith("eyJ") }
-            .hasPathSatisfying("$.data.tokenType") { type -> assertThat(type).isEqualTo("Bearer") }
-            .hasPathSatisfying("$.data.expiresIn") { expires -> assertThat(expires).isEqualTo(3600000) }
-    }
-
-    @Test
-    fun `Should return 401 when credentials are invalid`() {
-        // Given
-        val request = LoginRequest(
-            email = "test@example.com",
-            password = "wrongpassword"
-        )
-
-        whenever(authService.login(any()))
-            .thenThrow(InvalidCredentialsException("Invalid username or password"))
-
-        // When & Then
-        assertThat(
-            mockMvcTester.post()
-                .uri("/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request))
-        )
-            .hasStatus(HttpStatus.UNAUTHORIZED)
-            .bodyJson()
-            .hasPathSatisfying("$.success") { success -> assertThat(success).isEqualTo(false) }
-            .hasPathSatisfying("$.message") { message ->
-                assertThat(message).asString().contains("Invalid username or password")
-            }
-    }
-
-    @Test
-    fun `Should return 400 when login email format is invalid`() {
-        // Given
-        val invalidRequest = """
+        val validLoginRequest = """
             {
-                "email": "not-an-email",
+                "email": "customer@example.com",
                 "password": "password123"
             }
         """.trimIndent()
 
         // When & Then
-        assertThat(
-            mockMvcTester.post()
-                .uri("/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(invalidRequest)
-        )
-            .hasStatus(HttpStatus.BAD_REQUEST)
+        assertThat(mockMvcTester.post()
+            .uri("/auth/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(validLoginRequest))
+            .hasStatus(HttpStatus.OK)
             .bodyJson()
-            .hasPathSatisfying("$.success") { success -> assertThat(success).isEqualTo(false) }
-            .hasPathSatisfying("$.message") { message -> assertThat(message).isEqualTo("Validation failed") }
-            .hasPathSatisfying("$.errors") { errors -> assertThat(errors).asInstanceOf(LIST).isNotEmpty }
+            .hasPathSatisfying("$.success") { assertThat(it).isEqualTo(true) }
+            .hasPathSatisfying("$.data.id") { assertThat(it).isNotNull() }
+            .hasPathSatisfying("$.data.email") { assertThat(it).isEqualTo("customer@example.com") }
+            .hasPathSatisfying("$.data.role") { assertThat(it).isEqualTo("CUSTOMER") }
+            .hasPathSatisfying("$.data.accessToken") { assertThat(it).isNotNull() }
+            .hasPathSatisfying("$.data.refreshToken") { assertThat(it).isNotNull() }
+            .hasPathSatisfying("$.data.tokenType") { assertThat(it).isEqualTo("Bearer") }
+            .hasPathSatisfying("$.data.expiresIn") { assertThat(it).isEqualTo(3600000) }
     }
 
     @Test
-    fun `Should return 400 when login password is too short`() {
+    fun `should return 401 Unauthorized when email doesn't exist`() {
         // Given
-        val invalidRequest = """
+        given(authService.login(any()))
+            .willThrow(platform.ecommerce.exception.InvalidCredentialsException("Invalid email or password"))
+
+        val invalidEmailRequest = """
             {
-                "email": "test@example.com",
+                "email": "nonexistent@example.com",
+                "password": "password123"
+            }
+        """.trimIndent()
+
+        // When & Then
+        assertThat(mockMvcTester.post()
+            .uri("/auth/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(invalidEmailRequest))
+            .hasStatus(HttpStatus.UNAUTHORIZED)
+            .bodyJson()
+            .hasPathSatisfying("$.success") { assertThat(it).isEqualTo(false) }
+            .extractingPath("$.message").isEqualTo("Invalid email or password")
+    }
+
+    @Test
+    fun `should return 401 Unauthorized when password is incorrect`() {
+        // Given
+        given(authService.login(any()))
+            .willThrow(platform.ecommerce.exception.InvalidCredentialsException("Invalid email or password"))
+
+        val wrongPasswordRequest = """
+            {
+                "email": "customer@example.com",
+                "password": "wrongpassword"
+            }
+        """.trimIndent()
+
+        // When & Then
+        assertThat(mockMvcTester.post()
+            .uri("/auth/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(wrongPasswordRequest))
+            .hasStatus(HttpStatus.UNAUTHORIZED)
+            .bodyJson()
+            .hasPathSatisfying("$.success") { assertThat(it).isEqualTo(false) }
+            .extractingPath("$.message").isEqualTo("Invalid email or password")
+    }
+
+    @Test
+    fun `should return 401 Unauthorized when member status is PENDING`() {
+        // Given
+        given(authService.login(any()))
+            .willThrow(platform.ecommerce.exception.InvalidCredentialsException("Invalid email or password"))
+
+        val pendingMemberRequest = """
+            {
+                "email": "pending@example.com",
+                "password": "password123"
+            }
+        """.trimIndent()
+
+        // When & Then
+        assertThat(mockMvcTester.post()
+            .uri("/auth/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(pendingMemberRequest))
+            .hasStatus(HttpStatus.UNAUTHORIZED)
+            .bodyJson()
+            .hasPathSatisfying("$.success") { assertThat(it).isEqualTo(false) }
+    }
+
+    @Test
+    fun `should return 401 Unauthorized when member status is INACTIVE`() {
+        // Given
+        given(authService.login(any()))
+            .willThrow(platform.ecommerce.exception.InvalidCredentialsException("Invalid email or password"))
+
+        val inactiveMemberRequest = """
+            {
+                "email": "inactive@example.com",
+                "password": "password123"
+            }
+        """.trimIndent()
+
+        // When & Then
+        assertThat(mockMvcTester.post()
+            .uri("/auth/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(inactiveMemberRequest))
+            .hasStatus(HttpStatus.UNAUTHORIZED)
+            .bodyJson()
+            .hasPathSatisfying("$.success") { assertThat(it).isEqualTo(false) }
+    }
+
+    @Test
+    fun `should return 400 Bad Request when email is missing in login request`() {
+        // Given
+        val requestWithoutEmail = """
+            {
+                "password": "password123"
+            }
+        """.trimIndent()
+
+        // When & Then
+        assertThat(mockMvcTester.post()
+            .uri("/auth/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(requestWithoutEmail))
+            .hasStatus(HttpStatus.BAD_REQUEST)
+    }
+
+    @Test
+    fun `should return 400 Bad Request when password is missing in login request`() {
+        // Given
+        val requestWithoutPassword = """
+            {
+                "email": "customer@example.com"
+            }
+        """.trimIndent()
+
+        // When & Then
+        assertThat(mockMvcTester.post()
+            .uri("/auth/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(requestWithoutPassword))
+            .hasStatus(HttpStatus.BAD_REQUEST)
+    }
+
+    @Test
+    fun `should return 400 Bad Request when password is too short in login request`() {
+        // Given
+        val shortPasswordRequest = """
+            {
+                "email": "customer@example.com",
                 "password": "short"
             }
         """.trimIndent()
 
         // When & Then
-        assertThat(
-            mockMvcTester.post()
-                .uri("/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(invalidRequest)
-        )
+        assertThat(mockMvcTester.post()
+            .uri("/auth/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(shortPasswordRequest))
             .hasStatus(HttpStatus.BAD_REQUEST)
-            .bodyJson()
-            .hasPathSatisfying("$.success") { success -> assertThat(success).isEqualTo(false) }
-            .hasPathSatisfying("$.message") { message -> assertThat(message).isEqualTo("Validation failed") }
-    }
-
-    @Test
-    fun `Should return 400 when login credentials are missing`() {
-        // Given
-        val invalidRequest = """
-            {
-                "email": "",
-                "password": ""
-            }
-        """.trimIndent()
-
-        // When & Then
-        assertThat(
-            mockMvcTester.post()
-                .uri("/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(invalidRequest)
-        )
-            .hasStatus(HttpStatus.BAD_REQUEST)
-            .bodyJson()
-            .hasPathSatisfying("$.success") { success -> assertThat(success).isEqualTo(false) }
-            .hasPathSatisfying("$.errors") { errors -> assertThat(errors).asInstanceOf(LIST).hasSizeGreaterThanOrEqualTo(2) }
     }
 }

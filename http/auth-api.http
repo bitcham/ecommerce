@@ -1,0 +1,261 @@
+### ============================================
+### Authentication API Tests
+### Base URL: {{baseUrl}}
+### ============================================
+
+### 1. Register a new member
+### POST /auth/register
+### Expected: 201 Created
+### Description: Creates a new member with PENDING status and sends verification email
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{testEmail}}",
+  "password": "{{testPassword}}",
+  "firstName": "{{testFirstName}}",
+  "lastName": "{{testLastName}}",
+  "phone": "{{testPhone}}"
+}
+
+### Expected Response:
+# HTTP/1.1 201 Created
+# {
+#   "success": true,
+#   "data": {
+#     "id": "123e4567-e89b-12d3-a456-426614174000",
+#     "email": "test@example.com",
+#     "firstName": "John",
+#     "lastName": "Doe",
+#     "phone": "010-1234-5678",
+#     "role": "CUSTOMER",
+#     "status": "PENDING",
+#     "createdAt": "2025-11-08T10:30:00Z",
+#     "updatedAt": "2025-11-08T10:30:00Z"
+#   },
+#   "message": "Member registered successfully"
+# }
+
+### ============================================
+
+### 2. Register with minimal required fields (no phone)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "minimal@example.com",
+  "password": "password123",
+  "firstName": "Min",
+  "lastName": "User"
+}
+
+### Expected Response:
+# HTTP/1.1 201 Created
+# {
+#   "success": true,
+#   "data": {
+#     "id": "234e5678-e89b-12d3-a456-426614174001",
+#     "email": "minimal@example.com",
+#     "firstName": "Min",
+#     "lastName": "User",
+#     "phone": null,
+#     "role": "CUSTOMER",
+#     "status": "PENDING",
+#     "createdAt": "2025-11-08T10:31:00Z",
+#     "updatedAt": "2025-11-08T10:31:00Z"
+#   },
+#   "message": "Member registered successfully"
+# }
+
+### ============================================
+
+### 3. Register with duplicate email (Should fail)
+### Expected: 409 Conflict
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{testEmail}}",
+  "password": "{{testPassword}}",
+  "firstName": "Duplicate",
+  "lastName": "User"
+}
+
+### Expected Response:
+# HTTP/1.1 409 Conflict
+# {
+#   "success": false,
+#   "message": "Email already exists: test@example.com"
+# }
+
+### ============================================
+
+### 4. Register with invalid email format (Should fail)
+### Expected: 400 Bad Request
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "invalid-email",
+  "password": "{{testPassword}}",
+  "firstName": "Invalid",
+  "lastName": "Email"
+}
+
+### Expected Response:
+# HTTP/1.1 400 Bad Request
+# {
+#   "success": false,
+#   "message": "Validation failed",
+#   "errors": [
+#     "Invalid email format"
+#   ]
+# }
+
+### ============================================
+
+### 5. Register with short password (Should fail)
+### Expected: 400 Bad Request
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "shortpass@example.com",
+  "password": "short",
+  "firstName": "Short",
+  "lastName": "Pass"
+}
+
+### Expected Response:
+# HTTP/1.1 400 Bad Request
+# {
+#   "success": false,
+#   "message": "Validation failed",
+#   "errors": [
+#     "Password must be between 8 and 100 characters"
+#   ]
+# }
+
+### ============================================
+
+### 6. Login with valid credentials (ACTIVE user)
+### POST /auth/login
+### Expected: 200 OK
+### Description: Authenticates user and returns JWT tokens
+### NOTE: User must be ACTIVE (email verified) to login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{testEmail}}",
+  "password": "{{testPassword}}"
+}
+
+> {%
+    client.test("Login successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body.success === true, "Response is not successful");
+    });
+
+    // Save tokens for future requests
+    if (response.body.data && response.body.data.accessToken) {
+        client.global.set("accessToken", response.body.data.accessToken);
+        client.global.set("refreshToken", response.body.data.refreshToken);
+    }
+%}
+
+### Expected Response:
+# HTTP/1.1 200 OK
+# {
+#   "success": true,
+#   "data": {
+#     "id": "123e4567-e89b-12d3-a456-426614174000",
+#     "email": "test@example.com",
+#     "role": "CUSTOMER",
+#     "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+#     "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+#     "tokenType": "Bearer",
+#     "expiresIn": 86400000
+#   },
+#   "message": "Successfully logged in"
+# }
+
+### ============================================
+
+### 7. Login with PENDING user (Should fail)
+### Expected: 401 Unauthorized or similar error
+### Description: PENDING users (not verified) cannot login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "minimal@example.com",
+  "password": "password123"
+}
+
+### Expected Response:
+# HTTP/1.1 401 Unauthorized
+# {
+#   "success": false,
+#   "message": "Invalid email or password"
+# }
+
+### ============================================
+
+### 8. Login with invalid credentials
+### Expected: 401 Unauthorized
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{testEmail}}",
+  "password": "wrongpassword"
+}
+
+### Expected Response:
+# HTTP/1.1 401 Unauthorized
+# {
+#   "success": false,
+#   "message": "Invalid email or password"
+# }
+
+### ============================================
+
+### 9. Login with non-existent email
+### Expected: 401 Unauthorized
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "nonexistent@example.com",
+  "password": "{{testPassword}}"
+}
+
+### Expected Response:
+# HTTP/1.1 401 Unauthorized
+# {
+#   "success": false,
+#   "message": "Invalid email or password"
+# }
+
+### ============================================
+
+### 10. Login with invalid email format (Should fail)
+### Expected: 400 Bad Request
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "invalid-email",
+  "password": "{{testPassword}}"
+}
+
+### Expected Response:
+# HTTP/1.1 400 Bad Request
+# {
+#   "success": false,
+#   "message": "Validation failed",
+#   "errors": [
+#     "Invalid email format"
+#   ]
+# }

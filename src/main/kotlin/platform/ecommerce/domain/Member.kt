@@ -10,7 +10,6 @@ import java.util.*
 @Table(name = "members")
 class Member(
 
-
     @Column(nullable = false, unique = true)
     val email: String,
 
@@ -51,6 +50,10 @@ class Member(
     var deliveryAddress: Address? = null,
 
 ): BaseEntity() {
+    fun activate() {
+        this.status = MemberStatus.ACTIVE
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     var id: UUID? = null

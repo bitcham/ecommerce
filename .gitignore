@@ -8,6 +8,7 @@ build/
 CLAUDE.md
 LOGGING_GUIDELINES.md
 MockMvcTester-Testing-Guidelines.md
+ticket.md
 
 
 ### STS ###
@@ -43,3 +44,6 @@ out/
 
 ### Kotlin ###
 .kotlin
+
+### Docker ###
+docker-compose.yml

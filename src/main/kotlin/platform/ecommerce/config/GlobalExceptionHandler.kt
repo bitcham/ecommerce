@@ -9,6 +9,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import platform.ecommerce.dto.response.ApiResponse
 import platform.ecommerce.exception.DuplicateEmailException
 import platform.ecommerce.exception.InvalidCredentialsException
+import platform.ecommerce.exception.MemberAlreadyActivated
+import platform.ecommerce.exception.TokenAlreadyUsedException
+import platform.ecommerce.exception.TokenExpiredException
+import platform.ecommerce.exception.TokenNotFoundException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -79,5 +83,37 @@ class GlobalExceptionHandler {
             message = "An unexpected error occurred"
         )
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response)
+    }
+
+    @ExceptionHandler(TokenNotFoundException::class)
+    fun handleTokenNotFoundException(ex: TokenNotFoundException): ResponseEntity<ApiResponse<Nothing>> {
+        val response = ApiResponse.error<Nothing>(
+            message = ex.message ?: "Token not found"
+        )
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response)
+    }
+
+    @ExceptionHandler(TokenExpiredException::class)
+    fun handleTokenExpiredException(ex: TokenExpiredException): ResponseEntity<ApiResponse<Nothing>> {
+        val response = ApiResponse.error<Nothing>(
+            message = ex.message ?: "Token expired"
+        )
+        return ResponseEntity.status(HttpStatus.GONE).body(response)
+    }
+
+    @ExceptionHandler(TokenAlreadyUsedException::class)
+    fun handleTokenAlreadyUsedException(ex: TokenAlreadyUsedException): ResponseEntity<ApiResponse<Nothing>> {
+        val response = ApiResponse.error<Nothing>(
+            message = ex.message ?: "Token already used"
+        )
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response)
+    }
+
+    @ExceptionHandler(MemberAlreadyActivated::class)
+    fun handleMemberAlreadyActivated(ex: MemberAlreadyActivated): ResponseEntity<ApiResponse<Nothing>> {
+        val response = ApiResponse.error<Nothing>(
+            message = ex.message ?: "Member already activated"
+        )
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response)
     }
 }

@@ -35,18 +35,17 @@ class AuthController(
         return ApiResponse.success(registered, "Member registered successfully")
     }
 
-    @Operation(summary = "Login a member", description = "Logging in")
+    @Operation(
+        summary = "Login a member",
+        description = "Authenticates a member and returns JWT tokens. Member must be in ACTIVE "
+                + "status.")
     @ApiResponses(
         SwaggerResponse(responseCode = "200", description = "Successfully logged in"),
         SwaggerResponse(responseCode = "400", description = "Invalid input")
     )
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
-    fun login(@Valid @RequestBody request: LoginRequest): ApiResponse<LoginResponse>{
-        val data = authService.login(request)
-        val response = ApiResponse.success(data, "Successfully logged in")
-        return response
+    fun login(@Valid @RequestBody request: LoginRequest): ApiResponse<LoginResponse> {
+        return ApiResponse.success(authService.login(request), "Successfully logged in")
     }
-
-
 }
