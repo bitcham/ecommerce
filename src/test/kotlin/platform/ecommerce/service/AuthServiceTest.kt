@@ -8,14 +8,17 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
-import org.mockito.kotlin.*
+import org.mockito.kotlin.any
+import org.mockito.kotlin.never
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import org.springframework.security.authentication.AuthenticationManager
 import platform.ecommerce.domain.Member
 import platform.ecommerce.dto.request.MemberRegister
 import platform.ecommerce.enums.MemberRole
 import platform.ecommerce.enums.MemberStatus
 import platform.ecommerce.exception.DuplicateEmailException
-import platform.ecommerce.mapper.MemberMapper
+import platform.ecommerce.fixture.MemberFixture
 import platform.ecommerce.security.JwtUtil
 import platform.ecommerce.service.impl.AuthServiceImpl
 import java.util.*
@@ -25,9 +28,6 @@ class AuthServiceTest {
 
     @Mock
     private lateinit var memberService: MemberService
-
-    @Mock
-    private lateinit var memberMapper: MemberMapper
 
     @Mock
     private lateinit var authenticationManager: AuthenticationManager
@@ -49,45 +49,13 @@ class AuthServiceTest {
 
     @BeforeEach
     fun setUp() {
-        validRegisterRequest = MemberRegister(
-            email = "test@example.com",
-            password = "password123",
-            firstName = "John",
-            lastName = "Doe",
-            phone = "010-1234-5678"
-        )
-
-        testMember = Member(
-            email = "test@example.com",
-            passwordHash = "encodedPassword",
-            firstName = "John",
-            lastName = "Doe",
-            phone = "010-1234-5678",
-            role = MemberRole.CUSTOMER,
-            status = MemberStatus.PENDING
-        ).apply {
-            // Set ID using reflection since it's generated
-            val idField = Member::class.java.getDeclaredField("id")
-            idField.isAccessible = true
-            idField.set(this, UUID.randomUUID())
-        }
+        validRegisterRequest = MemberFixture.createMemberRegisterRequest()
+        testMember = MemberFixture.createMember()
     }
 
     @Test
     fun `should successfully register new member with valid data`() {
         // Given
-        val expectedResponse = platform.ecommerce.dto.response.MemberResponse(
-            id = testMember.id!!,
-            email = testMember.email,
-            firstName = testMember.firstName,
-            lastName = testMember.lastName,
-            phone = testMember.phone,
-            role = testMember.role,
-            status = testMember.status,
-            createdAt = java.time.Instant.now(),
-            updatedAt = java.time.Instant.now()
-        )
-
         val mockToken = platform.ecommerce.domain.EmailVerificationToken(
             token = UUID.randomUUID(),
             member = testMember,
@@ -96,7 +64,6 @@ class AuthServiceTest {
 
         whenever(memberService.register(validRegisterRequest)).thenReturn(testMember)
         whenever(emailVerificationService.createVerificationToken(testMember)).thenReturn(mockToken)
-        whenever(memberMapper.toResponse(testMember)).thenReturn(expectedResponse)
 
         // When
         val result = authService.register(validRegisterRequest)
@@ -114,7 +81,6 @@ class AuthServiceTest {
         verify(memberService).register(validRegisterRequest)
         verify(emailVerificationService).createVerificationToken(testMember)
         verify(emailService).sendVerificationEmail(testMember.email, mockToken.token)
-        verify(memberMapper).toResponse(testMember)
     }
 
     @Test
@@ -129,25 +95,15 @@ class AuthServiceTest {
             .hasMessageContaining("test@example.com")
 
         verify(memberService).register(validRegisterRequest)
-        verify(memberMapper, never()).toResponse(any())
+        verify(emailVerificationService, never()).createVerificationToken(any())
+        verify(emailService, never()).sendVerificationEmail(any(), any())
     }
 
     @Test
     fun `should register member without phone number`() {
         // Given
-        val requestWithoutPhone = validRegisterRequest.copy(phone = null)
-        val memberWithoutPhone = testMember.apply { phone = null }
-        val expectedResponse = platform.ecommerce.dto.response.MemberResponse(
-            id = memberWithoutPhone.id!!,
-            email = memberWithoutPhone.email,
-            firstName = memberWithoutPhone.firstName,
-            lastName = memberWithoutPhone.lastName,
-            phone = null,
-            role = memberWithoutPhone.role,
-            status = memberWithoutPhone.status,
-            createdAt = java.time.Instant.now(),
-            updatedAt = java.time.Instant.now()
-        )
+        val requestWithoutPhone = MemberFixture.createMemberRegisterRequest(phone = null)
+        val memberWithoutPhone = MemberFixture.createMember(phone = null)
 
         val mockToken = platform.ecommerce.domain.EmailVerificationToken(
             token = UUID.randomUUID(),
@@ -157,7 +113,6 @@ class AuthServiceTest {
 
         whenever(memberService.register(requestWithoutPhone)).thenReturn(memberWithoutPhone)
         whenever(emailVerificationService.createVerificationToken(memberWithoutPhone)).thenReturn(mockToken)
-        whenever(memberMapper.toResponse(memberWithoutPhone)).thenReturn(expectedResponse)
 
         // When
         val result = authService.register(requestWithoutPhone)
@@ -168,24 +123,11 @@ class AuthServiceTest {
         verify(memberService).register(requestWithoutPhone)
         verify(emailVerificationService).createVerificationToken(memberWithoutPhone)
         verify(emailService).sendVerificationEmail(memberWithoutPhone.email, mockToken.token)
-        verify(memberMapper).toResponse(memberWithoutPhone)
     }
 
     @Test
     fun `password should be encrypted with BCrypt`() {
         // Given
-        val expectedResponse = platform.ecommerce.dto.response.MemberResponse(
-            id = testMember.id!!,
-            email = testMember.email,
-            firstName = testMember.firstName,
-            lastName = testMember.lastName,
-            phone = testMember.phone,
-            role = testMember.role,
-            status = testMember.status,
-            createdAt = java.time.Instant.now(),
-            updatedAt = java.time.Instant.now()
-        )
-
         val mockToken = platform.ecommerce.domain.EmailVerificationToken(
             token = UUID.randomUUID(),
             member = testMember,
@@ -194,7 +136,6 @@ class AuthServiceTest {
 
         whenever(memberService.register(validRegisterRequest)).thenReturn(testMember)
         whenever(emailVerificationService.createVerificationToken(testMember)).thenReturn(mockToken)
-        whenever(memberMapper.toResponse(testMember)).thenReturn(expectedResponse)
 
         // When
         authService.register(validRegisterRequest)
@@ -203,6 +144,5 @@ class AuthServiceTest {
         verify(memberService).register(validRegisterRequest)
         verify(emailVerificationService).createVerificationToken(testMember)
         verify(emailService).sendVerificationEmail(testMember.email, mockToken.token)
-        verify(memberMapper).toResponse(testMember)
     }
 }

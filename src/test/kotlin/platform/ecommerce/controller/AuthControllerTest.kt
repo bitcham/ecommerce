@@ -1,5 +1,6 @@
 package platform.ecommerce.controller
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -14,13 +15,14 @@ import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.assertj.MockMvcTester
 import platform.ecommerce.config.SecurityConfig
+import platform.ecommerce.domain.Member
+import platform.ecommerce.dto.request.LoginRequest
 import platform.ecommerce.dto.response.MemberResponse
-import platform.ecommerce.enums.MemberRole
-import platform.ecommerce.enums.MemberStatus
 import platform.ecommerce.exception.DuplicateEmailException
+import platform.ecommerce.fixture.MemberFixture
+import platform.ecommerce.mapper.MemberMapper
 import platform.ecommerce.security.JwtUtil
 import platform.ecommerce.service.AuthService
-import java.time.Instant
 import java.util.*
 
 @WebMvcTest(controllers = [AuthController::class])
@@ -30,6 +32,9 @@ class AuthControllerTest {
     @Autowired
     private lateinit var mockMvcTester: MockMvcTester
 
+    @Autowired
+    private lateinit var objectMapper: ObjectMapper
+
     @MockitoBean
     private lateinit var authService: AuthService
 
@@ -37,44 +42,49 @@ class AuthControllerTest {
     private lateinit var jwtUtil: JwtUtil
 
     @MockitoBean
+    private lateinit var memberMapper: MemberMapper
+
+    @MockitoBean
     private lateinit var userDetailsService: UserDetailsService
 
+    private lateinit var member: Member
     private lateinit var memberResponse: MemberResponse
+    private lateinit var memberResponseWithoutPhone: MemberResponse
 
     @BeforeEach
     fun setUp() {
-        memberResponse = MemberResponse(
-            id = UUID.randomUUID(),
+        member = MemberFixture.createMember(
             email = "customer@example.com",
-            firstName = "John",
-            lastName = "Doe",
-            phone = "010-1234-5678",
-            role = MemberRole.CUSTOMER,
-            status = MemberStatus.PENDING,
-            createdAt = Instant.now(),
-            updatedAt = Instant.now()
+            password = "hashedpassword"
+        )
+
+        memberResponse = MemberFixture.createMemberResponse(
+            id = member.id!!,
+            email = "customer@example.com"
+        )
+
+        memberResponseWithoutPhone = MemberFixture.createMemberResponse(
+            id = member.id!!,
+            email = "customer@example.com",
+            phone = null
         )
     }
 
     @Test
     fun `should successfully register member with valid request and return 201 Created`() {
         // Given
-        given(authService.register(any())).willReturn(memberResponse)
-        val validRequest = """
-            {
-                "email": "customer@example.com",
-                "password": "password123",
-                "firstName": "John",
-                "lastName": "Doe",
-                "phone": "010-1234-5678"
-            }
-        """.trimIndent()
+        given(authService.register(any())).willReturn(member)
+        given(memberMapper.toResponse(member)).willReturn(memberResponse)
+        val validRequest = MemberFixture.createMemberRegisterRequest(
+            email = "customer@example.com",
+            password = "password123"
+        )
 
         // When & Then
         assertThat(mockMvcTester.post()
             .uri("/auth/register")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(validRequest))
+            .content(objectMapper.writeValueAsString(validRequest)))
             .hasStatus(HttpStatus.CREATED)
             .bodyJson()
             .hasPathSatisfying("$.success") { assertThat(it).isEqualTo(true) }
@@ -89,22 +99,25 @@ class AuthControllerTest {
     @Test
     fun `should successfully register member without phone number`() {
         // Given
-        val responseWithoutPhone = memberResponse.copy(phone = null)
-        given(authService.register(any())).willReturn(responseWithoutPhone)
-        val requestWithoutPhone = """
-            {
-                "email": "customer@example.com",
-                "password": "password123",
-                "firstName": "John",
-                "lastName": "Doe"
-            }
-        """.trimIndent()
+        val memberWithoutPhone = MemberFixture.createMember(
+            email = "customer@example.com",
+            password = "hashedpassword",
+            phone = null
+        )
+
+        given(authService.register(any())).willReturn(memberWithoutPhone)
+        given(memberMapper.toResponse(memberWithoutPhone)).willReturn(memberResponseWithoutPhone)
+        val requestWithoutPhone = MemberFixture.createMemberRegisterRequest(
+            email = "customer@example.com",
+            password = "password123",
+            phone = null
+        )
 
         // When & Then
         assertThat(mockMvcTester.post()
             .uri("/auth/register")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(requestWithoutPhone))
+            .content(objectMapper.writeValueAsString(requestWithoutPhone)))
             .hasStatus(HttpStatus.CREATED)
             .bodyJson()
             .hasPathSatisfying("$.success") { assertThat(it).isEqualTo(true) }
@@ -116,20 +129,16 @@ class AuthControllerTest {
         // Given
         given(authService.register(any()))
             .willThrow(DuplicateEmailException("Email already exists: customer@example.com"))
-        val validRequest = """
-            {
-                "email": "customer@example.com",
-                "password": "password123",
-                "firstName": "John",
-                "lastName": "Doe"
-            }
-        """.trimIndent()
+        val validRequest = MemberFixture.createMemberRegisterRequest(
+            email = "customer@example.com",
+            password = "password123"
+        )
 
         // When & Then
         assertThat(mockMvcTester.post()
             .uri("/auth/register")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(validRequest))
+            .content(objectMapper.writeValueAsString(validRequest)))
             .hasStatus(HttpStatus.CONFLICT)
             .bodyJson()
             .hasPathSatisfying("$.success") { assertThat(it).isEqualTo(false) }
@@ -139,13 +148,11 @@ class AuthControllerTest {
     @Test
     fun `should return 400 Bad Request when email is invalid or missing`() {
         // Test missing email
-        val requestWithoutEmail = """
-            {
-                "password": "password123",
-                "firstName": "John",
-                "lastName": "Doe"
-            }
-        """.trimIndent()
+        val requestWithoutEmail = objectMapper.writeValueAsString(mapOf(
+            "password" to "password123",
+            "firstName" to "John",
+            "lastName" to "Doe"
+        ))
 
         assertThat(mockMvcTester.post()
             .uri("/auth/register")
@@ -154,14 +161,12 @@ class AuthControllerTest {
             .hasStatus(HttpStatus.BAD_REQUEST)
 
         // Test invalid email format
-        val invalidEmailRequest = """
-            {
-                "email": "invalid-email",
-                "password": "password123",
-                "firstName": "John",
-                "lastName": "Doe"
-            }
-        """.trimIndent()
+        val invalidEmailRequest = objectMapper.writeValueAsString(mapOf(
+            "email" to "invalid-email",
+            "password" to "password123",
+            "firstName" to "John",
+            "lastName" to "Doe"
+        ))
 
         assertThat(mockMvcTester.post()
             .uri("/auth/register")
@@ -173,13 +178,11 @@ class AuthControllerTest {
     @Test
     fun `should return 400 Bad Request when password validation fails`() {
         // Test missing password
-        val requestWithoutPassword = """
-            {
-                "email": "customer@example.com",
-                "firstName": "John",
-                "lastName": "Doe"
-            }
-        """.trimIndent()
+        val requestWithoutPassword = objectMapper.writeValueAsString(mapOf(
+            "email" to "customer@example.com",
+            "firstName" to "John",
+            "lastName" to "Doe"
+        ))
 
         assertThat(mockMvcTester.post()
             .uri("/auth/register")
@@ -188,14 +191,12 @@ class AuthControllerTest {
             .hasStatus(HttpStatus.BAD_REQUEST)
 
         // Test short password
-        val shortPasswordRequest = """
-            {
-                "email": "customer@example.com",
-                "password": "short",
-                "firstName": "John",
-                "lastName": "Doe"
-            }
-        """.trimIndent()
+        val shortPasswordRequest = objectMapper.writeValueAsString(mapOf(
+            "email" to "customer@example.com",
+            "password" to "short",
+            "firstName" to "John",
+            "lastName" to "Doe"
+        ))
 
         assertThat(mockMvcTester.post()
             .uri("/auth/register")
@@ -207,13 +208,11 @@ class AuthControllerTest {
     @Test
     fun `should return 400 Bad Request when name validation fails`() {
         // Test missing firstName
-        val requestWithoutFirstName = """
-            {
-                "email": "customer@example.com",
-                "password": "password123",
-                "lastName": "Doe"
-            }
-        """.trimIndent()
+        val requestWithoutFirstName = objectMapper.writeValueAsString(mapOf(
+            "email" to "customer@example.com",
+            "password" to "password123",
+            "lastName" to "Doe"
+        ))
 
         assertThat(mockMvcTester.post()
             .uri("/auth/register")
@@ -222,14 +221,12 @@ class AuthControllerTest {
             .hasStatus(HttpStatus.BAD_REQUEST)
 
         // Test firstName exceeds 50 characters
-        val longFirstNameRequest = """
-            {
-                "email": "customer@example.com",
-                "password": "password123",
-                "firstName": "${"A".repeat(51)}",
-                "lastName": "Doe"
-            }
-        """.trimIndent()
+        val longFirstNameRequest = objectMapper.writeValueAsString(mapOf(
+            "email" to "customer@example.com",
+            "password" to "password123",
+            "firstName" to "A".repeat(51),
+            "lastName" to "Doe"
+        ))
 
         assertThat(mockMvcTester.post()
             .uri("/auth/register")
@@ -241,15 +238,13 @@ class AuthControllerTest {
     @Test
     fun `should return 400 Bad Request when phone exceeds 20 characters`() {
         // Given
-        val longPhoneRequest = """
-            {
-                "email": "customer@example.com",
-                "password": "password123",
-                "firstName": "John",
-                "lastName": "Doe",
-                "phone": "${"0".repeat(21)}"
-            }
-        """.trimIndent()
+        val longPhoneRequest = objectMapper.writeValueAsString(mapOf(
+            "email" to "customer@example.com",
+            "password" to "password123",
+            "firstName" to "John",
+            "lastName" to "Doe",
+            "phone" to "0".repeat(21)
+        ))
 
         // When & Then
         assertThat(mockMvcTester.post()
@@ -275,12 +270,10 @@ class AuthControllerTest {
         )
         given(authService.login(any())).willReturn(loginResponse)
 
-        val validLoginRequest = """
-            {
-                "email": "customer@example.com",
-                "password": "password123"
-            }
-        """.trimIndent()
+        val validLoginRequest = objectMapper.writeValueAsString(LoginRequest(
+            email = "customer@example.com",
+            password = "password123"
+        ))
 
         // When & Then
         assertThat(mockMvcTester.post()
@@ -305,12 +298,10 @@ class AuthControllerTest {
         given(authService.login(any()))
             .willThrow(platform.ecommerce.exception.InvalidCredentialsException("Invalid email or password"))
 
-        val invalidEmailRequest = """
-            {
-                "email": "nonexistent@example.com",
-                "password": "password123"
-            }
-        """.trimIndent()
+        val invalidEmailRequest = objectMapper.writeValueAsString(LoginRequest(
+            email = "nonexistent@example.com",
+            password = "password123"
+        ))
 
         // When & Then
         assertThat(mockMvcTester.post()
@@ -329,12 +320,10 @@ class AuthControllerTest {
         given(authService.login(any()))
             .willThrow(platform.ecommerce.exception.InvalidCredentialsException("Invalid email or password"))
 
-        val wrongPasswordRequest = """
-            {
-                "email": "customer@example.com",
-                "password": "wrongpassword"
-            }
-        """.trimIndent()
+        val wrongPasswordRequest = objectMapper.writeValueAsString(LoginRequest(
+            email = "customer@example.com",
+            password = "wrongpassword"
+        ))
 
         // When & Then
         assertThat(mockMvcTester.post()
@@ -353,12 +342,10 @@ class AuthControllerTest {
         given(authService.login(any()))
             .willThrow(platform.ecommerce.exception.InvalidCredentialsException("Invalid email or password"))
 
-        val pendingMemberRequest = """
-            {
-                "email": "pending@example.com",
-                "password": "password123"
-            }
-        """.trimIndent()
+        val pendingMemberRequest = objectMapper.writeValueAsString(LoginRequest(
+            email = "pending@example.com",
+            password = "password123"
+        ))
 
         // When & Then
         assertThat(mockMvcTester.post()
@@ -376,12 +363,10 @@ class AuthControllerTest {
         given(authService.login(any()))
             .willThrow(platform.ecommerce.exception.InvalidCredentialsException("Invalid email or password"))
 
-        val inactiveMemberRequest = """
-            {
-                "email": "inactive@example.com",
-                "password": "password123"
-            }
-        """.trimIndent()
+        val inactiveMemberRequest = objectMapper.writeValueAsString(LoginRequest(
+            email = "inactive@example.com",
+            password = "password123"
+        ))
 
         // When & Then
         assertThat(mockMvcTester.post()
@@ -396,11 +381,9 @@ class AuthControllerTest {
     @Test
     fun `should return 400 Bad Request when email is missing in login request`() {
         // Given
-        val requestWithoutEmail = """
-            {
-                "password": "password123"
-            }
-        """.trimIndent()
+        val requestWithoutEmail = objectMapper.writeValueAsString(mapOf(
+            "password" to "password123"
+        ))
 
         // When & Then
         assertThat(mockMvcTester.post()
@@ -413,11 +396,9 @@ class AuthControllerTest {
     @Test
     fun `should return 400 Bad Request when password is missing in login request`() {
         // Given
-        val requestWithoutPassword = """
-            {
-                "email": "customer@example.com"
-            }
-        """.trimIndent()
+        val requestWithoutPassword = objectMapper.writeValueAsString(mapOf(
+            "email" to "customer@example.com"
+        ))
 
         // When & Then
         assertThat(mockMvcTester.post()
@@ -430,12 +411,10 @@ class AuthControllerTest {
     @Test
     fun `should return 400 Bad Request when password is too short in login request`() {
         // Given
-        val shortPasswordRequest = """
-            {
-                "email": "customer@example.com",
-                "password": "short"
-            }
-        """.trimIndent()
+        val shortPasswordRequest = objectMapper.writeValueAsString(mapOf(
+            "email" to "customer@example.com",
+            "password" to "short"
+        ))
 
         // When & Then
         assertThat(mockMvcTester.post()

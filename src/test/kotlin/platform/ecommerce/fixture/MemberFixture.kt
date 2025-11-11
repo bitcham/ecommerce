@@ -45,8 +45,8 @@ object MemberFixture {
             role = role,
             status = status
         ).apply {
-            // Set ID using reflection
-            val idField = Member::class.java.superclass.getDeclaredField("id")
+            // Set ID using reflection (id is defined in Member class itself)
+            val idField = Member::class.java.getDeclaredField("id")
             idField.isAccessible = true
             idField.set(this, id)
         }

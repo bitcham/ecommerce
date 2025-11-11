@@ -43,8 +43,8 @@ class EmailVerificationControllerTest {
         val validToken = UUID.randomUUID()
 
         // When & Then
-        assertThat(mockMvcTester.post()
-            .uri("/auth/verify-email/$validToken"))
+        assertThat(mockMvcTester.get()
+            .uri("/auth/verify-email?token=$validToken"))
             .hasStatus(HttpStatus.OK)
             .bodyJson()
             .hasPathSatisfying("$.success") { assertThat(it).isEqualTo(true) }
@@ -61,8 +61,8 @@ class EmailVerificationControllerTest {
             .willThrow(TokenNotFoundException("Token not found"))
 
         // When & Then
-        assertThat(mockMvcTester.post()
-            .uri("/auth/verify-email/$nonExistentToken"))
+        assertThat(mockMvcTester.get()
+            .uri("/auth/verify-email?token=$nonExistentToken"))
             .hasStatus(HttpStatus.NOT_FOUND)
             .bodyJson()
             .hasPathSatisfying("$.success") { assertThat(it).isEqualTo(false) }
@@ -77,8 +77,8 @@ class EmailVerificationControllerTest {
             .willThrow(TokenExpiredException("Token expired"))
 
         // When & Then
-        assertThat(mockMvcTester.post()
-            .uri("/auth/verify-email/$expiredToken"))
+        assertThat(mockMvcTester.get()
+            .uri("/auth/verify-email?token=$expiredToken"))
             .hasStatus(HttpStatus.GONE)
             .bodyJson()
             .hasPathSatisfying("$.success") { assertThat(it).isEqualTo(false) }
@@ -93,8 +93,8 @@ class EmailVerificationControllerTest {
             .willThrow(TokenAlreadyUsedException("Token already used"))
 
         // When & Then
-        assertThat(mockMvcTester.post()
-            .uri("/auth/verify-email/$usedToken"))
+        assertThat(mockMvcTester.get()
+            .uri("/auth/verify-email?token=$usedToken"))
             .hasStatus(HttpStatus.CONFLICT)
             .bodyJson()
             .hasPathSatisfying("$.success") { assertThat(it).isEqualTo(false) }
@@ -109,8 +109,8 @@ class EmailVerificationControllerTest {
             .willThrow(MemberAlreadyActivated("Member already activated"))
 
         // When & Then
-        assertThat(mockMvcTester.post()
-            .uri("/auth/verify-email/$activeToken"))
+        assertThat(mockMvcTester.get()
+            .uri("/auth/verify-email?token=$activeToken"))
             .hasStatus(HttpStatus.CONFLICT)
             .bodyJson()
             .hasPathSatisfying("$.success") { assertThat(it).isEqualTo(false) }
