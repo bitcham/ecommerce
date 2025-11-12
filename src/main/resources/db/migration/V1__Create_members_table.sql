@@ -1,5 +1,5 @@
--- Create members table
-CREATE TABLE members (
+-- Create member table
+CREATE TABLE member (
     id                          UUID            PRIMARY KEY,
     email                       VARCHAR(255)    NOT NULL UNIQUE,
     password_hash               VARCHAR(255)    NOT NULL,
@@ -19,7 +19,7 @@ CREATE TABLE members (
 );
 
 -- Create index on email for faster lookups
-CREATE INDEX idx_members_email ON members(email);
+CREATE INDEX idx_member_email ON member(email);
 
 -- Create index on status for filtering
-CREATE INDEX idx_members_status ON members(status);
+CREATE INDEX idx_member_status ON member(status);

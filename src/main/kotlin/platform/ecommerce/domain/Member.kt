@@ -7,7 +7,7 @@ import platform.ecommerce.enums.MemberStatus
 import java.util.*
 
 @Entity
-@Table(name = "members")
+@Table(name = "member")
 class Member(
 
     @Column(nullable = false, unique = true)

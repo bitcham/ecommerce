@@ -10,7 +10,7 @@ import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Component
 import platform.ecommerce.config.JwtProperties
-import java.util.Date
+import java.util.*
 import javax.crypto.SecretKey
 
 @Component

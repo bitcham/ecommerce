@@ -10,9 +10,7 @@ import platform.ecommerce.domain.Member
 import platform.ecommerce.dto.request.LoginRequest
 import platform.ecommerce.dto.request.MemberRegister
 import platform.ecommerce.dto.response.LoginResponse
-import platform.ecommerce.dto.response.MemberResponse
 import platform.ecommerce.exception.InvalidCredentialsException
-import platform.ecommerce.mapper.MemberMapper
 import platform.ecommerce.security.JwtUtil
 import platform.ecommerce.service.AuthService
 import platform.ecommerce.service.EmailService
@@ -23,14 +21,13 @@ import platform.ecommerce.utils.Logger.Companion.logger
 @Service
 class AuthServiceImpl(
     private val memberService: MemberService,
-    private val memberMapper: MemberMapper,
     private val authenticationManager: AuthenticationManager,
     private val jwtUtil: JwtUtil,
     private val emailVerificationService: EmailVerificationService,
     private val emailService: EmailService
 ): AuthService {
     @Transactional
-    override fun register(request: MemberRegister): MemberResponse {
+    override fun register(request: MemberRegister): Member {
         val member = memberService.register(request)
 
         // Create verification token
@@ -41,7 +38,7 @@ class AuthServiceImpl(
 
         logger.info { "Verification email sent for member: ${member.email}" }
 
-        return memberMapper.toResponse(member)
+        return member;
     }
 
     @Transactional(readOnly = true)

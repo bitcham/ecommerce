@@ -3,7 +3,6 @@ package platform.ecommerce.service
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import platform.ecommerce.domain.EmailVerificationToken
 import platform.ecommerce.domain.Member
 import platform.ecommerce.dto.request.MemberRegister
 import platform.ecommerce.enums.MemberStatus
@@ -11,7 +10,6 @@ import platform.ecommerce.exception.DuplicateEmailException
 import platform.ecommerce.exception.MemberAlreadyActivated
 import platform.ecommerce.exception.MemberNotFoundException
 import platform.ecommerce.repository.MemberRepository
-import platform.ecommerce.utils.Logger
 import platform.ecommerce.utils.Logger.Companion.logger
 
 @Service

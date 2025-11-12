@@ -1,7 +1,6 @@
 package platform.ecommerce.controller
 
 import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
@@ -12,13 +11,16 @@ import platform.ecommerce.dto.request.MemberRegister
 import platform.ecommerce.dto.response.ApiResponse
 import platform.ecommerce.dto.response.LoginResponse
 import platform.ecommerce.dto.response.MemberResponse
+import platform.ecommerce.mapper.MemberMapper
 import platform.ecommerce.service.AuthService
+import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerResponse
 
 @Tag(name = "Authentication", description = "Member authentication and registration")
 @RestController
 @RequestMapping("/auth")
 class AuthController(
-    private val authService: AuthService
+    private val authService: AuthService,
+    private val memberMapper: MemberMapper
 ) {
 
 
@@ -32,7 +34,8 @@ class AuthController(
     @ResponseStatus(HttpStatus.CREATED)
     fun register(@Valid @RequestBody request: MemberRegister): ApiResponse<MemberResponse> {
         val registered = authService.register(request)
-        return ApiResponse.success(registered, "Member registered successfully")
+        val response = memberMapper.toResponse(registered)
+        return ApiResponse.success(response, "Member registered successfully")
     }
 
     @Operation(

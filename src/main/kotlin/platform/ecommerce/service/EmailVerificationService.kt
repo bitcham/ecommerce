@@ -10,7 +10,7 @@ import platform.ecommerce.exception.TokenExpiredException
 import platform.ecommerce.exception.TokenNotFoundException
 import platform.ecommerce.repository.EmailVerificationTokenRepository
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 @Service
 class EmailVerificationService(

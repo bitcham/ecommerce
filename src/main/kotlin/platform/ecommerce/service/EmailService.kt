@@ -5,7 +5,7 @@ import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.stereotype.Service
 import platform.ecommerce.config.EcommerceProperties
 import platform.ecommerce.utils.Logger.Companion.logger
-import java.util.UUID
+import java.util.*
 
 @Service
 class EmailService(

@@ -7,12 +7,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import platform.ecommerce.dto.response.ApiResponse
-import platform.ecommerce.exception.DuplicateEmailException
-import platform.ecommerce.exception.InvalidCredentialsException
-import platform.ecommerce.exception.MemberAlreadyActivated
-import platform.ecommerce.exception.TokenAlreadyUsedException
-import platform.ecommerce.exception.TokenExpiredException
-import platform.ecommerce.exception.TokenNotFoundException
+import platform.ecommerce.exception.*
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -115,5 +110,13 @@ class GlobalExceptionHandler {
             message = ex.message ?: "Member already activated"
         )
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response)
+    }
+
+    @ExceptionHandler(ProductNotFoundException::class)
+    fun handleProductNotFoundException(ex: ProductNotFoundException): ResponseEntity<ApiResponse<Nothing>> {
+        val response = ApiResponse.error<Nothing>(
+            message = ex.message ?: "Product not found"
+        )
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response)
     }
 }

@@ -3,6 +3,7 @@ package platform.ecommerce.config
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider
@@ -17,7 +18,6 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import platform.ecommerce.config.security.JwtAuthenticationFilter
-import platform.ecommerce.config.JwtProperties
 
 @Configuration
 @EnableWebSecurity
@@ -34,6 +34,10 @@ class SecurityConfig(
             .csrf { csrf -> csrf.disable() }
             .authorizeHttpRequests { auth ->
                 auth
+                    .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/products/**").hasAnyAuthority("SELLER", "ADMIN")
+                    .requestMatchers(HttpMethod.PUT, "/products/**").hasAnyAuthority("SELLER", "ADMIN")
+                    .requestMatchers(HttpMethod.DELETE, "/products/**").hasAnyAuthority("SELLER", "ADMIN")
                     .requestMatchers(
                         "/auth/**",
                         "/actuator/**",

@@ -10,7 +10,7 @@ CREATE TABLE email_verification_token (
 
     CONSTRAINT fk_email_verification_member
         FOREIGN KEY (member_id)
-        REFERENCES members(id)
+        REFERENCES member(id)
         ON DELETE CASCADE
 );
 

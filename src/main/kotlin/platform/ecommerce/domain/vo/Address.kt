@@ -2,7 +2,6 @@ package platform.ecommerce.domain.vo
 
 import jakarta.persistence.Embeddable
 import jakarta.validation.constraints.NotBlank
-import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 
 /**
