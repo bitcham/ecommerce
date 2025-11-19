@@ -10,7 +10,6 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.springframework.data.repository.findByIdOrNull
 import platform.ecommerce.domain.vo.Money
 import platform.ecommerce.enums.ProductStatus
 import platform.ecommerce.exception.ProductNotFoundException
@@ -112,6 +111,50 @@ class ProductServiceTest {
         assertThatThrownBy { productService.removeProductOption(productId, optionId) }
             .isInstanceOf(ProductNotFoundException::class.java)
             .hasMessageContaining("Product not found")
+    }
+
+    @Test
+    fun `should get product successfully`() {
+        // Given
+        val productId = 1L
+        val expectedProduct = ProductFixture.createProduct(id = productId)
+
+        whenever(productRepository.findWithOptionsById(productId)).thenReturn(expectedProduct)
+
+        // When
+        val retrievedProduct = productService.getProduct(productId)
+
+        // Then
+        assertThat(retrievedProduct).isEqualTo(expectedProduct)
+    }
+
+    @Test
+    fun `should throw exception when getting non-existent product`() {
+        // Given
+        val productId = 999L
+
+        whenever(productRepository.findWithOptionsById(productId)).thenReturn(null)
+
+        // When & Then
+        assertThatThrownBy { productService.getProduct(productId) }
+            .isInstanceOf(ProductNotFoundException::class.java)
+            .hasMessageContaining("Product not found")
+    }
+
+    @Test
+    fun `should get all products successfully`() {
+        // Given
+        val product1 = ProductFixture.createProduct(id = 1L, sku = "PROD-001")
+        val product2 = ProductFixture.createProduct(id = 2L, sku = "PROD-002")
+
+        whenever(productRepository.findAll()).thenReturn(listOf(product1, product2))
+
+        // When
+        val products = productService.getAllProducts()
+
+        // Then
+        assertThat(products).hasSize(2)
+        assertThat(products).containsExactlyInAnyOrder(product1, product2)
     }
 
 }

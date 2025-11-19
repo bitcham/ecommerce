@@ -4,8 +4,9 @@ import platform.ecommerce.domain.Product
 import platform.ecommerce.domain.ProductOption
 import platform.ecommerce.dto.request.ProductCreateRequest
 import platform.ecommerce.dto.request.ProductOptionRequest
+import platform.ecommerce.dto.response.ProductDetailResponse
+import platform.ecommerce.dto.response.ProductListResponse
 import platform.ecommerce.dto.response.ProductOptionResponse
-import platform.ecommerce.dto.response.ProductResponse
 import platform.ecommerce.enums.ProductStatus
 
 object ProductFixture {
@@ -59,28 +60,6 @@ object ProductFixture {
         )
     }
 
-    fun createProductResponse(
-        id: Long = 1L,
-        sku: String = "PROD-001",
-        name: String = "Sample Product",
-        description: String = "This is a sample product.",
-        price: Double = 99.9,
-        imageUrl: String = "http://example.com/image.jpg",
-        status: ProductStatus = ProductStatus.AVAILABLE,
-        options: List<ProductOptionResponse> = emptyList()
-    ): ProductResponse {
-        return ProductResponse(
-            id = id,
-            sku = sku,
-            name = name,
-            description = description,
-            price = price,
-            imageUrl = imageUrl,
-            status = status,
-            options = options
-        )
-    }
-
     fun createProductOptionResponse(
         id: Long = 1L,
         sku: String = "PROD-001-Red-M",
@@ -92,6 +71,46 @@ object ProductFixture {
             sku = sku,
             optionName = optionName,
             stockQuantity = stockQuantity
+        )
+    }
+
+    fun createProductListResponse(
+        id: Long = 1L,
+        sku: String = "PROD-001",
+        name: String = "Sample Product",
+        price: Double = 99.9,
+        imageUrl: String = "http://example.com/image.jpg",
+        status: ProductStatus = ProductStatus.AVAILABLE
+    ): ProductListResponse {
+        return ProductListResponse(
+            id = id,
+            sku = sku,
+            name = name,
+            price = price,
+            imageUrl = imageUrl,
+            status = status
+        )
+    }
+
+    fun createProductDetailResponse(
+        id: Long = 1L,
+        sku: String = "PROD-001",
+        name: String = "Sample Product",
+        description: String = "This is a sample product.",
+        price: Double = 99.9,
+        imageUrl: String = "http://example.com/image.jpg",
+        status: ProductStatus = ProductStatus.AVAILABLE,
+        options: List<ProductOptionResponse> = emptyList()
+    ): ProductDetailResponse {
+        return ProductDetailResponse(
+            id = id,
+            sku = sku,
+            name = name,
+            description = description,
+            price = price,
+            imageUrl = imageUrl,
+            status = status,
+            options = options
         )
     }
 

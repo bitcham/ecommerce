@@ -2,7 +2,7 @@ package platform.ecommerce.dto.response
 
 import platform.ecommerce.enums.ProductStatus
 
-data class ProductResponse(
+data class ProductDetailResponse(
     val id: Long,
     val sku: String,
     val name: String,

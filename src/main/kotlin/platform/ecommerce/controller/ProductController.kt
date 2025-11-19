@@ -7,8 +7,9 @@ import org.springframework.web.bind.annotation.*
 import platform.ecommerce.dto.request.ProductCreateRequest
 import platform.ecommerce.dto.request.ProductOptionRequest
 import platform.ecommerce.dto.response.ApiResponse
+import platform.ecommerce.dto.response.ProductDetailResponse
+import platform.ecommerce.dto.response.ProductListResponse
 import platform.ecommerce.dto.response.ProductOptionResponse
-import platform.ecommerce.dto.response.ProductResponse
 import platform.ecommerce.mapper.ProductMapper
 import platform.ecommerce.mapper.ProductOptionMapper
 import platform.ecommerce.service.ProductService
@@ -22,13 +23,14 @@ class ProductController(
     private val productOptionMapper: ProductOptionMapper
 ) {
     @Operation(summary = "Create a new product", description = "Creates a new product in the catalog")
-    @ApiResponses(SwaggerResponse(responseCode = "201", description = "Product created successfully")
+    @ApiResponses(
+        SwaggerResponse(responseCode = "201", description = "Product created successfully")
     )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun createProduct(@RequestBody request: ProductCreateRequest): ApiResponse<ProductResponse> {
+    fun createProduct(@RequestBody request: ProductCreateRequest): ApiResponse<ProductDetailResponse> {
         val product = productService.createProduct(request)
-        val response = productMapper.toResponse(product)
+        val response = productMapper.toDetailResponse(product)
         return ApiResponse.success(response, "Product created successfully")
     }
 
@@ -58,5 +60,30 @@ class ProductController(
         @PathVariable optionId: Long
     ) {
         productService.removeProductOption(productId, optionId)
+    }
+
+    @Operation(summary = "Get product details", description = "Retrieves detailed information of a product including options")
+    @ApiResponses(
+        SwaggerResponse(responseCode = "200", description = "Product retrieved successfully"),
+        SwaggerResponse(responseCode = "404", description = "Product not found")
+    )
+    @GetMapping("/{productId}")
+    @ResponseStatus(HttpStatus.OK)
+    fun getProduct(@PathVariable productId: Long): ApiResponse<ProductDetailResponse> {
+        val product = productService.getProduct(productId)
+        val response = productMapper.toDetailResponse(product)
+        return ApiResponse.success(response, "Product retrieved successfully")
+    }
+
+    @Operation(summary = "Get all products", description = "Retrieves list of all products with basic information")
+    @ApiResponses(
+        SwaggerResponse(responseCode = "200", description = "Products retrieved successfully")
+    )
+    @GetMapping
+    @ResponseStatus(HttpStatus.OK)
+    fun getAllProducts(): ApiResponse<List<ProductListResponse>> {
+        val products = productService.getAllProducts()
+        val response = products.map { productMapper.toListResponse(it) }
+        return ApiResponse.success(response, "Products retrieved successfully")
     }
 }

@@ -2,10 +2,6 @@ package platform.ecommerce.dto.response
 
 import com.fasterxml.jackson.annotation.JsonInclude
 
-/**
- * Generic API response wrapper.
- * Provides consistent response structure across all endpoints.
- */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class ApiResponse<T>(
     val success: Boolean,

@@ -5,10 +5,6 @@ import platform.ecommerce.enums.MemberStatus
 import java.time.Instant
 import java.util.*
 
-/**
- * Response DTO for member information.
- * Excludes sensitive data like password hash.
- */
 data class MemberResponse(
     val id: UUID,
     val email: String,

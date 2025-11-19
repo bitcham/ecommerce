@@ -57,4 +57,15 @@ class ProductService(
 
         logger.info{ "Option removed: productId=$productId, optionId=$optionId" }
     }
+
+    @Transactional(readOnly = true)
+    fun getProduct(productId: Long): Product {
+        return productRepository.findWithOptionsById(productId)
+            ?: throw ProductNotFoundException("Product not found")
+    }
+
+    @Transactional(readOnly = true)
+    fun getAllProducts(): List<Product> {
+        return productRepository.findAll()
+    }
 }
