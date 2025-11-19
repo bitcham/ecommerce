@@ -94,4 +94,11 @@ object ProductFixture {
             stockQuantity = stockQuantity
         )
     }
+
+    fun setProductOptionId(option: ProductOption, id: Long): ProductOption {
+        val idField = ProductOption::class.java.getDeclaredField("id")
+        idField.isAccessible = true
+        idField.set(option, id)
+        return option
+    }
 }

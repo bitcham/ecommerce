@@ -4,6 +4,7 @@ import jakarta.persistence.*
 import jakarta.persistence.GenerationType.IDENTITY
 import platform.ecommerce.domain.vo.Money
 import platform.ecommerce.enums.ProductStatus
+import platform.ecommerce.utils.SkuGenerator.generateOptionSku
 
 @Entity
 class Product(
@@ -32,10 +33,10 @@ class Product(
         protected set
 
     @OneToMany(mappedBy = "product", cascade = [CascadeType.ALL], orphanRemoval = true)
-    private val mutableOptions: MutableList<ProductOption> = mutableListOf()
+    private val productOptions: MutableList<ProductOption> = mutableListOf()
 
     val options: List<ProductOption>
-        get() = mutableOptions.toList()
+        get() = productOptions.toList()
 
     fun getPrice(): Money = price
 
@@ -64,14 +65,21 @@ class Product(
     }
 
     fun addOption(optionName: String, stockQuantity: Int) {
-        val optionSku = platform.ecommerce.utils.SkuGenerator.generateOptionSku(this.sku, optionName)
+        val optionSku = generateOptionSku(this.sku, optionName)
         val option = ProductOption.create(
             product = this,
             sku = optionSku,
             optionName = optionName,
             stockQuantity = stockQuantity
         )
-        mutableOptions.add(option)
+        productOptions.add(option)
+        checkAndUpdateStatus()
+    }
+
+    fun removeOption(optionId: Long) {
+        val option = productOptions.find { it.id == optionId }
+            ?: throw IllegalArgumentException("Product option with ID $optionId not found")
+        productOptions.remove(option)
         checkAndUpdateStatus()
     }
 
@@ -88,7 +96,7 @@ class Product(
     }
 
     private fun hasAvailableStock(): Boolean {
-        return mutableOptions.any { it.isOrderable() }
+        return productOptions.any { it.isOrderable() }
     }
 
     companion object {

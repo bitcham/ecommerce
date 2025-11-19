@@ -47,4 +47,14 @@ class ProductService(
 
         return product.options.last()
     }
+
+    @Transactional
+    fun removeProductOption(productId: Long, optionId: Long) {
+        val product = productRepository.findById(productId)
+            ?: throw ProductNotFoundException("Product not found")
+
+        product.removeOption(optionId)
+
+        logger.info{ "Option removed: productId=$productId, optionId=$optionId" }
+    }
 }

@@ -63,7 +63,7 @@ class ProductServiceTest {
         // Then
         assertThat(addedOption.optionName).isEqualTo("Red/M")
         assertThat(addedOption.getStockQuantity()).isEqualTo(10)
-        assertThat(addedOption.sku).isEqualTo("PROD-001-Red-M")
+        assertThat(addedOption.sku).isEqualTo("PROD-001-RED-M")
         assertThat(product.options).hasSize(1)
         assertThat(product.getProductStatus()).isEqualTo(ProductStatus.AVAILABLE)
     }
@@ -81,4 +81,37 @@ class ProductServiceTest {
             .isInstanceOf(ProductNotFoundException::class.java)
             .hasMessageContaining("Product not found")
     }
+
+    @Test
+    fun `should remove product option successfully`() {
+        // Given
+        val productId = 1L
+        val product = ProductFixture.createProduct(id = productId)
+        product.addOption("Red/M", 10)
+        val option = ProductFixture.setProductOptionId(product.options.first(), 1L)
+
+        whenever(productRepository.findById(productId)).thenReturn(product)
+
+        // When
+        productService.removeProductOption(productId, option.id!!)
+
+        // Then
+        assertThat(product.options).isEmpty()
+        assertThat(product.getProductStatus()).isEqualTo(ProductStatus.OUT_OF_STOCK)
+    }
+
+    @Test
+    fun `should throw exception when removing option from non-existent product`() {
+        // Given
+        val productId = 999L
+        val optionId = 1L
+
+        whenever(productRepository.findById(productId)).thenReturn(null)
+
+        // When & Then
+        assertThatThrownBy { productService.removeProductOption(productId, optionId) }
+            .isInstanceOf(ProductNotFoundException::class.java)
+            .hasMessageContaining("Product not found")
+    }
+
 }
