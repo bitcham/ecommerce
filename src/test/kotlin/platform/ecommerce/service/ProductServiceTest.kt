@@ -157,4 +157,32 @@ class ProductServiceTest {
         assertThat(products).containsExactlyInAnyOrder(product1, product2)
     }
 
+    @Test
+    fun `should delete product successfully`() {
+        // Given
+        val productId = 1L
+        val product = ProductFixture.createProduct(id = productId)
+
+        whenever(productRepository.findById(productId)).thenReturn(product)
+
+        // When
+        productService.deleteProduct(productId)
+
+        // Then
+        assertThat(product.isDeleted()).isTrue()
+    }
+
+    @Test
+    fun `should throw exception when deleting non-existent product`() {
+        // Given
+        val productId = 999L
+
+        whenever(productRepository.findById(productId)).thenReturn(null)
+
+        // When & Then
+        assertThatThrownBy { productService.deleteProduct(productId) }
+            .isInstanceOf(ProductNotFoundException::class.java)
+            .hasMessageContaining("Product not found")
+    }
+
 }

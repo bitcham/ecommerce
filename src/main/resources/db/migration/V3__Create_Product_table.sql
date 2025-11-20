@@ -10,7 +10,8 @@ CREATE TABLE product (
     created_at              TIMESTAMP           NOT NULL,
     updated_at              TIMESTAMP           NOT NULL,
     version                 BIGINT              NOT NULL DEFAULT 0,
-
+    deleted_at              TIMESTAMP
+        
     CONSTRAINT chk_product_amount_non_negative CHECK (amount >= 0),
     CONSTRAINT chk_product_status CHECK (product_status IN ('AVAILABLE', 'OUT_OF_STOCK', 'DISCONTINUED'))
 );

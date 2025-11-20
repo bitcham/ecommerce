@@ -1,7 +1,8 @@
-package platform.ecommerce.controller
+﻿package platform.ecommerce.controller
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponses
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 import platform.ecommerce.dto.request.ProductCreateRequest
@@ -24,25 +25,37 @@ class ProductController(
 ) {
     @Operation(summary = "Create a new product", description = "Creates a new product in the catalog")
     @ApiResponses(
-        SwaggerResponse(responseCode = "201", description = "Product created successfully")
+        SwaggerResponse(responseCode = "201", description = "Product created successfully"),
+        SwaggerResponse(responseCode = "400", description = "Invalid input")
     )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun createProduct(@RequestBody request: ProductCreateRequest): ApiResponse<ProductDetailResponse> {
+    fun createProduct(@Valid @RequestBody request: ProductCreateRequest): ApiResponse<ProductDetailResponse> {
         val product = productService.createProduct(request)
         val response = productMapper.toDetailResponse(product)
         return ApiResponse.success(response, "Product created successfully")
     }
 
+    @Operation(summary = "Delete a product", description = "Soft deletes an existing product from the catalog")
+    @ApiResponses(
+        SwaggerResponse(responseCode = "204", description = "Product deleted successfully")
+    )
+    @DeleteMapping("/{productId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun deleteProduct(@PathVariable productId: Long) {
+        productService.deleteProduct(productId)
+    }
+
     @Operation(summary = "Add a product option", description = "Adds an option to an existing product")
     @ApiResponses(
-        SwaggerResponse(responseCode = "201", description = "Product option added successfully")
+        SwaggerResponse(responseCode = "201", description = "Product option added successfully"),
+        SwaggerResponse(responseCode = "400", description = "Invalid input")
     )
     @PostMapping("/{productId}/options")
     @ResponseStatus(HttpStatus.CREATED)
     fun addProductOption(
         @PathVariable productId: Long,
-        @RequestBody request: ProductOptionRequest
+        @Valid @RequestBody request: ProductOptionRequest
     ): ApiResponse<ProductOptionResponse> {
         val option = productService.addProductOption(productId, request)
         val response = productOptionMapper.toResponse(option)
@@ -69,7 +82,7 @@ class ProductController(
     )
     @GetMapping("/{productId}")
     @ResponseStatus(HttpStatus.OK)
-    fun getProduct(@PathVariable productId: Long): ApiResponse<ProductDetailResponse> {
+    fun getProduct(@Valid @PathVariable productId: Long): ApiResponse<ProductDetailResponse> {
         val product = productService.getProduct(productId)
         val response = productMapper.toDetailResponse(product)
         return ApiResponse.success(response, "Product retrieved successfully")

@@ -13,4 +13,11 @@ interface ProductRepository: Repository<Product, Long> {
     fun findWithOptionsById(productId: Long): Product?
 
     fun findAll(): List<Product>
+
+    // Admin queries that include deleted products (bypasses @SQLRestriction)
+    @Query(value = "SELECT * FROM product WHERE id = :productId", nativeQuery = true)
+    fun findByIdIncludingDeleted(productId: Long): Product?
+
+    @Query(value = "SELECT * FROM product", nativeQuery = true)
+    fun findAllIncludingDeleted(): List<Product>
 }

@@ -2,11 +2,13 @@ package platform.ecommerce.domain
 
 import jakarta.persistence.*
 import jakarta.persistence.GenerationType.IDENTITY
+import org.hibernate.annotations.SQLRestriction
 import platform.ecommerce.domain.vo.Money
 import platform.ecommerce.enums.ProductStatus
 import platform.ecommerce.utils.SkuGenerator.generateOptionSku
 
 @Entity
+@SQLRestriction("deleted_at IS NULL")
 class Product(
     @Column(nullable = false, unique = true, length = 100)
     var sku: String,
@@ -14,7 +16,7 @@ class Product(
     @Column(nullable = false)
     var name: String,
 
-    @Lob
+    @Column(columnDefinition = "TEXT")
     var description: String,
 
     @Embedded
@@ -26,7 +28,7 @@ class Product(
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, name = "product_status")
     private var productStatus: ProductStatus = ProductStatus.AVAILABLE
-): VersionedBaseEntity() {
+): SoftDeletableEntity() {
 
     @Id @GeneratedValue(strategy = IDENTITY)
     var id: Long? = null

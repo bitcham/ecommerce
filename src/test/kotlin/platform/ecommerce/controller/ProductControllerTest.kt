@@ -5,6 +5,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.mockito.BDDMockito.given
 import org.mockito.kotlin.any
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -126,21 +127,33 @@ class ProductControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = ["SELLER"])
-    fun `should return 400 Bad Request when creating product with missing fields`() {
-        // Given
-        val invalidRequest = objectMapper.writeValueAsString(mapOf(
-            "name" to "Sample Product"
-            // missing sku, price, etc.
-        ))
+@WithMockUser(authorities = ["SELLER"])
+fun `should return 400 Bad Request when creating product with missing fields`() {
+    // Given
+    val invalidRequest = ProductFixture.createProductCreateRequest(
+        sku = " ",
+        name = "",
+        price = -1.0,
+        imageUrl = ""
+    )
 
-        // When & Then
-        assertThat(mockMvcTester.post()
-            .uri("/products")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(invalidRequest))
-            .hasStatus(HttpStatus.BAD_REQUEST)
-    }
+    // When & Then
+    assertThat(mockMvcTester.post()
+        .uri("/products")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(invalidRequest)))
+        .hasStatus(HttpStatus.BAD_REQUEST)
+        .bodyJson()
+        .hasPathSatisfying("$.message") { assertThat(it).isEqualTo("Validation failed") }
+        .hasPathSatisfying("$.errors") {
+            assertThat(it).asList().anySatisfy { error -> assertThat(error as String).contains("sku") }
+            assertThat(it).asList().anySatisfy { error -> assertThat(error as String).contains("name") }
+            assertThat(it).asList().anySatisfy { error -> assertThat(error as String).contains("price") }
+            assertThat(it).asList().anySatisfy { error -> assertThat(error as String).contains("imageUrl") }
+        }
+
+    verify(productService, never()).createProduct(any())
+}
 
     @Test
     @WithMockUser(authorities = ["CUSTOMER"])
@@ -170,26 +183,27 @@ class ProductControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = ["SELLER"])
-    fun `should return 201 Created when seller adds productOption`() {
-        // Given
-        val productId = 1L
-        val optionRequest = ProductFixture.createProductOptionRequest()
-        val product = ProductFixture.createProduct(id = productId)
-        product.addOption(optionRequest.optionName, optionRequest.stockQuantity)
-        val addedOption = product.options.first()
-        val optionResponse = ProductFixture.createProductOptionResponse()
+@WithMockUser(authorities = ["SELLER"])
+fun `should return 400 Bad Request when adding option with invalid fields`() {
+    // Given
+    val productId = 1L
+    val invalidOptionRequest = ProductFixture.createProductOptionRequest(optionName = "", stockQuantity = -5)
 
-        given(productService.addProductOption(any(), any())).willReturn(addedOption)
-        given(productOptionMapper.toResponse(any())).willReturn(optionResponse)
+    // When & Then
+    assertThat(mockMvcTester.post()
+        .uri("/products/$productId/options")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(invalidOptionRequest)))
+        .hasStatus(HttpStatus.BAD_REQUEST)
+        .bodyJson()
+        .hasPathSatisfying("$.message") { assertThat(it).isEqualTo("Validation failed") }
+        .hasPathSatisfying("$.errors") {
+            assertThat(it).asList().anySatisfy { error -> assertThat(error as String).contains("optionName") }
+            assertThat(it).asList().anySatisfy { error -> assertThat(error as String).contains("stockQuantity") }
+        }
 
-        // When & Then
-        assertThat(mockMvcTester.post()
-            .uri("/products/$productId/options")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(optionRequest)))
-            .hasStatus(HttpStatus.CREATED)
-    }
+    verify(productService, never()).addProductOption(any(), any())
+}
 
     @Test
     @WithMockUser(authorities = ["SELLER"])
@@ -268,6 +282,20 @@ class ProductControllerTest {
             .hasPathSatisfying("$.success") { assertThat(it).isEqualTo(true) }
             .hasPathSatisfying("$.message") { assertThat(it).isEqualTo("Products retrieved successfully") }
             .hasPathSatisfying("$.data") { assertThat(it).asList().hasSize(2) }
+    }
+
+    @Test
+    @WithMockUser(authorities = ["SELLER"])
+    fun `should return 204 No Content when deleting product successfully`() {
+        // Given
+        val productId = 1L
+
+        // When & Then
+        assertThat(mockMvcTester.delete()
+            .uri("/products/$productId"))
+            .hasStatus(HttpStatus.NO_CONTENT)
+
+        verify(productService).deleteProduct(productId)
     }
 
 }

@@ -34,6 +34,14 @@ class ProductService(
     }
 
     @Transactional
+    fun deleteProduct(productId: Long) {
+        val product = productRepository.findById(productId)
+            ?: throw ProductNotFoundException("Product not found: productId=$productId")
+
+        product.softDelete()
+    }
+
+    @Transactional
     fun addProductOption(productId: Long, request: ProductOptionRequest): ProductOption {
         val product = productRepository.findById(productId)
             ?: throw ProductNotFoundException("Product not found: productId=$productId")
