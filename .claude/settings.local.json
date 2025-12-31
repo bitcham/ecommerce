@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(dir \"C:\\Users\\ckaql\\ecommerce\")",
+      "Bash(./gradlew:*)",
+      "Bash(cat:*)",
+      "WebSearch",
+      "Bash(git log:*)",
+      "Bash(dir /b)",
+      "Bash(dir:*)",
+      "Bash(.\\\\gradlew.bat compileJava:*)",
+      "Bash(cmd /c \"gradlew.bat compileJava --no-daemon\")",
+      "Bash(cmd /c \"C:\\\\Users\\\\ckaql\\\\ecommerce\\\\gradlew.bat compileJava --no-daemon\")",
+      "Bash(gradle wrapper:*)",
+      "Bash(C:Usersckaqlecommercegradlew.bat test --tests platform.ecommerce.service.MemberServiceTest --no-daemon)",
+      "Bash(cmd /c \"cd /d C:\\\\Users\\\\ckaql\\\\ecommerce && gradlew.bat test --tests platform.ecommerce.service.MemberServiceTest --no-daemon\")",
+      "Bash(cmd /c \"C:\\\\Users\\\\ckaql\\\\ecommerce\\\\gradlew.bat test --tests platform.ecommerce.service.MemberServiceTest --no-daemon 2>&1\")",
+      "Bash(cmd /c:*)",
+      "Bash(powershell -Command \"cd C:\\\\Users\\\\ckaql\\\\ecommerce; .\\\\gradlew.bat test --tests platform.ecommerce.service.MemberServiceTest --no-daemon 2>&1\":*)",
+      "Bash(powershell -Command:*)",
+      "Bash(gradlew.bat test:*)",
+      "Bash(findstr:*)",
+      "Bash(find:*)",
+      "Bash(cd:*)",
+      "Bash(tree:*)",
+      "Bash(ls:*)",
+      "Bash(wc:*)",
+      "Bash(java -version:*)",
+      "Bash(where:*)"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "outputStyle": "Learning"
+}

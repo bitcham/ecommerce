@@ -1,0 +1,51 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.H2Dialect
+
+  flyway:
+    enabled: false
+
+  # Disable Redis for tests
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
+  # Disable mail for tests
+  mail:
+    host: localhost
+    port: 25
+
+  cache:
+    type: simple
+
+jwt:
+  secret: test-secret-key-for-testing-only-minimum-256-bits-required-here
+  access-token-expiration: 900000
+  refresh-token-expiration: 604800000
+
+app:
+  name: Ecommerce Test
+  version: 1.0.0-TEST
+  base-url: http://localhost:8080
+  mail:
+    from: test@ecommerce.com
+  email-verification:
+    expiration-hours: 24
+
+logging:
+  level:
+    root: WARN
+    platform.ecommerce: DEBUG

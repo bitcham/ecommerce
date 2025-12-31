@@ -1,0 +1,62 @@
+# ===== Build =====
+build/
+!gradle/wrapper/gradle-wrapper.jar
+*.class
+*.jar
+*.war
+*.ear
+
+# ===== Gradle =====
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+.gradletasknamecache
+
+# ===== IDE - IntelliJ IDEA =====
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# ===== IDE - Eclipse =====
+.classpath
+.project
+.settings/
+bin/
+
+# ===== IDE - VS Code =====
+.vscode/
+
+# ===== Spring Boot =====
+application-local.yml
+application-local.properties
+
+# ===== Environment & Secrets =====
+.env
+.env.*
+*.pem
+*.key
+secrets/
+
+# ===== Logs =====
+logs/
+*.log
+spring.log
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== Test =====
+/target/
+*.exec
+
+# ===== Misc =====
+*.swp
+*.swo
+*~
+
+
+CLAUDE.md
