@@ -153,17 +153,17 @@ import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 public ErrorResponse handleRateLimitExceeded(RequestNotPermitted ex) {
     log.warn("Rate limit exceeded: {}", ex.getMessage());
     return ErrorResponse.of(
-        ErrorCode.TOO_MANY_REQUESTS,
-        "Too many requests. Please try again later."
+        ErrorCode.RATE_LIMIT_EXCEEDED.name(),
+        ErrorCode.RATE_LIMIT_EXCEEDED.getMessage()
     );
 }
 ```
 
-**ErrorCode에 추가** (필요시):
+**ErrorCode 확인**: 이미 `RATE_LIMIT_EXCEEDED`가 존재합니다 (line 105):
 
 ```java
-// ErrorCode.java
-TOO_MANY_REQUESTS(429, "Too many requests", HttpStatus.TOO_MANY_REQUESTS),
+// ErrorCode.java - 이미 존재함, 추가 불필요!
+RATE_LIMIT_EXCEEDED(9004, HttpStatus.TOO_MANY_REQUESTS, "Rate limit exceeded")
 ```
 
 ---
@@ -186,10 +186,14 @@ TOO_MANY_REQUESTS(429, "Too many requests", HttpStatus.TOO_MANY_REQUESTS),
 ```java
 @SpringBootTest
 @AutoConfigureMockMvc
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class AuthControllerRateLimitTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Test
     @DisplayName("로그인 5회 초과 시 429 반환")
@@ -258,7 +262,7 @@ class AuthControllerRateLimitTest {
 | `application.yml` | MODIFY | Rate Limiter 설정 추가 |
 | `AuthController.java` | MODIFY | @RateLimiter 어노테이션 추가 |
 | `GlobalExceptionHandler.java` | MODIFY | RequestNotPermitted 예외 처리 |
-| `ErrorCode.java` | MODIFY | TOO_MANY_REQUESTS 추가 (필요시) |
+| `ErrorCode.java` | 수정 불필요 | `RATE_LIMIT_EXCEEDED` 이미 존재 |
 | `AuthControllerRateLimitTest.java` | NEW | Rate Limit 테스트 |
 
 ---

@@ -1,5 +1,6 @@
 package platform.ecommerce.exception;
 
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -104,6 +105,22 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(ErrorCode.FORBIDDEN.getHttpStatus())
+                .body(ApiResponse.error(error));
+    }
+
+    /**
+     * Handle rate limit exceeded exceptions from Resilience4j.
+     */
+    @ExceptionHandler(RequestNotPermitted.class)
+    public ResponseEntity<ApiResponse<Void>> handleRateLimitException(RequestNotPermitted e) {
+        log.warn("Rate limit exceeded: {}", e.getMessage());
+
+        ErrorResponse error = ErrorResponse.of(
+                ErrorCode.RATE_LIMIT_EXCEEDED.name(),
+                "Too many requests. Please try again later.");
+
+        return ResponseEntity
+                .status(ErrorCode.RATE_LIMIT_EXCEEDED.getHttpStatus())
                 .body(ApiResponse.error(error));
     }
 

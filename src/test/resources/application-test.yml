@@ -49,3 +49,33 @@ logging:
   level:
     root: WARN
     platform.ecommerce: DEBUG
+
+# Rate Limiter Configuration for Tests
+# All limiters set to 2 requests per second for fast, consistent testing
+resilience4j:
+  ratelimiter:
+    instances:
+      default:
+        limit-for-period: 100
+        limit-refresh-period: 1s
+        timeout-duration: 0s
+      auth:
+        limit-for-period: 2
+        limit-refresh-period: 1s
+        timeout-duration: 0s
+      register:
+        limit-for-period: 2
+        limit-refresh-period: 1s
+        timeout-duration: 0s
+      email-action:
+        limit-for-period: 2
+        limit-refresh-period: 1s
+        timeout-duration: 0s
+      sensitive-action:
+        limit-for-period: 2
+        limit-refresh-period: 1s
+        timeout-duration: 0s
+      token-action:
+        limit-for-period: 2
+        limit-refresh-period: 1s
+        timeout-duration: 0s

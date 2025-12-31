@@ -140,6 +140,18 @@ resilience4j:
         limit-for-period: 3
         limit-refresh-period: 1h
         timeout-duration: 0s
+      email-action:
+        limit-for-period: 3
+        limit-refresh-period: 1h
+        timeout-duration: 0s
+      sensitive-action:
+        limit-for-period: 5
+        limit-refresh-period: 1h
+        timeout-duration: 0s
+      token-action:
+        limit-for-period: 3
+        limit-refresh-period: 1m
+        timeout-duration: 0s
   circuitbreaker:
     instances:
       external-api:

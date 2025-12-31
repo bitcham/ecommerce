@@ -47,6 +47,7 @@ public class AuthController {
     }
 
     @Operation(summary = "Refresh token", description = "Get new access token using refresh token")
+    @RateLimiter(name = "token-action")
     @PostMapping("/refresh")
     public ApiResponse<TokenResponse> refreshToken(
             @Valid @RequestBody TokenRefreshRequest request
@@ -74,6 +75,7 @@ public class AuthController {
     }
 
     @Operation(summary = "Verify email", description = "Verify email with token")
+    @RateLimiter(name = "token-action")
     @GetMapping("/verify-email")
     public ApiResponse<String> verifyEmail(
             @Parameter(description = "Verification token") @RequestParam String token
@@ -83,6 +85,7 @@ public class AuthController {
     }
 
     @Operation(summary = "Resend verification email", description = "Resend email verification link")
+    @RateLimiter(name = "email-action")
     @PostMapping("/resend-verification")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void resendVerificationEmail(
@@ -92,6 +95,7 @@ public class AuthController {
     }
 
     @Operation(summary = "Request password reset", description = "Request password reset email")
+    @RateLimiter(name = "email-action")
     @PostMapping("/forgot-password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void requestPasswordReset(
@@ -101,6 +105,7 @@ public class AuthController {
     }
 
     @Operation(summary = "Reset password", description = "Reset password with token")
+    @RateLimiter(name = "sensitive-action")
     @PostMapping("/reset-password")
     public ApiResponse<String> resetPassword(
             @Valid @RequestBody PasswordResetRequest request

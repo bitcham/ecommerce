@@ -117,5 +117,5 @@ docs/auth/
 ## Notes
 
 - TODO: Implement async email sending
-- TODO: Add rate limiting for login attempts
+- ~~TODO: Add rate limiting for login attempts~~ ✅ Completed (2025-12-31) - See `docs/auth-rate-limiter/checkpoint.md`
 - All 16 unit tests passing

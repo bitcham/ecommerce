@@ -32,7 +32,7 @@ Lead Engineer 리뷰에서 **일관성 문제**가 지적되었습니다:
 
 ## 현재 문제 코드
 
-**파일**: `OrderServiceImpl.java:232-278`
+**파일**: `OrderServiceImpl.java:256-302`
 
 ```java
 // 현재 코드 (수동 변환 - 제거 대상)
