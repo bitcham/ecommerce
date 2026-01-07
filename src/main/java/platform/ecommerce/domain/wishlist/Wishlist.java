@@ -2,7 +2,7 @@ package platform.ecommerce.domain.wishlist;
 
 import jakarta.persistence.*;
 import lombok.*;
-import platform.ecommerce.domain.common.BaseTimeEntity;
+import platform.ecommerce.domain.common.BaseEntity;
 
 /**
  * Wishlist entity representing a member's wishlist item.
@@ -17,11 +17,7 @@ import platform.ecommerce.domain.common.BaseTimeEntity;
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Wishlist extends BaseTimeEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Wishlist extends BaseEntity {
 
     @Column(name = "member_id", nullable = false)
     private Long memberId;

@@ -2,7 +2,7 @@ package platform.ecommerce.domain.auth;
 
 import jakarta.persistence.*;
 import lombok.*;
-import platform.ecommerce.domain.common.BaseTimeEntity;
+import platform.ecommerce.domain.common.BaseEntity;
 import platform.ecommerce.domain.member.Member;
 import platform.ecommerce.exception.ErrorCode;
 import platform.ecommerce.exception.InvalidStateException;
@@ -18,13 +18,9 @@ import java.util.UUID;
 @Table(name = "password_reset_token")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PasswordResetToken extends BaseTimeEntity {
+public class PasswordResetToken extends BaseEntity {
 
     private static final int EXPIRATION_HOURS = 1;
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     @Column(nullable = false, unique = true)
     private String token;

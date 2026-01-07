@@ -2,7 +2,7 @@ package platform.ecommerce.domain.notification;
 
 import jakarta.persistence.*;
 import lombok.*;
-import platform.ecommerce.domain.common.BaseTimeEntity;
+import platform.ecommerce.domain.common.BaseEntity;
 
 import java.time.LocalDateTime;
 
@@ -13,11 +13,7 @@ import java.time.LocalDateTime;
 @Table(name = "notification")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Notification extends BaseTimeEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Notification extends BaseEntity {
 
     @Column(name = "member_id", nullable = false)
     private Long memberId;

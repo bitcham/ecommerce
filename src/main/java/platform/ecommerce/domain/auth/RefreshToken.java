@@ -2,7 +2,7 @@ package platform.ecommerce.domain.auth;
 
 import jakarta.persistence.*;
 import lombok.*;
-import platform.ecommerce.domain.common.BaseTimeEntity;
+import platform.ecommerce.domain.common.BaseEntity;
 import platform.ecommerce.domain.member.Member;
 
 import java.time.LocalDateTime;
@@ -19,11 +19,7 @@ import java.util.UUID;
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class RefreshToken extends BaseTimeEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class RefreshToken extends BaseEntity {
 
     @Column(nullable = false, unique = true)
     private String token;
