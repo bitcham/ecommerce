@@ -2,6 +2,7 @@ package platform.ecommerce.domain.category;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLRestriction;
 import platform.ecommerce.domain.common.BaseEntity;
 import platform.ecommerce.domain.common.SoftDeletable;
 import platform.ecommerce.exception.ErrorCode;
@@ -18,6 +19,7 @@ import java.time.LocalDateTime;
         @Index(name = "idx_category_parent", columnList = "parent_id"),
         @Index(name = "idx_category_slug", columnList = "slug")
 })
+@SQLRestriction("deleted_at IS NULL")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Category extends BaseEntity implements SoftDeletable {

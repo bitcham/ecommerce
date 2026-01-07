@@ -231,7 +231,7 @@ public class CategoryServiceImpl implements CategoryService {
     // ========== Private Helper Methods ==========
 
     private Category findCategoryById(Long categoryId) {
-        return categoryRepository.findByIdNotDeleted(categoryId)
+        return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.CATEGORY_NOT_FOUND));
     }
 

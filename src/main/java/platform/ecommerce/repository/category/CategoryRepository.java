@@ -10,6 +10,7 @@ import java.util.Optional;
 
 /**
  * Repository for Category aggregate root.
+ * Note: @SQLRestriction on Category entity automatically filters deleted records.
  */
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 
@@ -17,21 +18,26 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     boolean existsBySlug(String slug);
 
-    @Query("SELECT c FROM Category c WHERE c.deletedAt IS NULL AND c.parentId IS NULL ORDER BY c.displayOrder")
+    @Query("SELECT c FROM Category c WHERE c.parentId IS NULL ORDER BY c.displayOrder")
     List<Category> findRootCategories();
 
-    @Query("SELECT c FROM Category c WHERE c.deletedAt IS NULL AND c.parentId = :parentId ORDER BY c.displayOrder")
+    @Query("SELECT c FROM Category c WHERE c.parentId = :parentId ORDER BY c.displayOrder")
     List<Category> findByParentId(@Param("parentId") Long parentId);
 
-    @Query("SELECT c FROM Category c WHERE c.deletedAt IS NULL ORDER BY c.depth, c.displayOrder")
+    @Query("SELECT c FROM Category c ORDER BY c.depth, c.displayOrder")
     List<Category> findAllActive();
 
-    @Query("SELECT c FROM Category c WHERE c.deletedAt IS NULL AND c.id = :id")
-    Optional<Category> findByIdNotDeleted(@Param("id") Long id);
-
-    @Query("SELECT COUNT(c) > 0 FROM Category c WHERE c.parentId = :parentId AND c.deletedAt IS NULL")
+    @Query("SELECT COUNT(c) > 0 FROM Category c WHERE c.parentId = :parentId")
     boolean hasChildren(@Param("parentId") Long parentId);
 
-    @Query("SELECT COUNT(c) FROM Category c WHERE c.parentId = :parentId AND c.deletedAt IS NULL")
+    @Query("SELECT COUNT(c) FROM Category c WHERE c.parentId = :parentId")
     int countChildren(@Param("parentId") Long parentId);
+
+    // ========== Admin Methods (bypass @SQLRestriction) ==========
+
+    /**
+     * Find category by ID including deleted (for admin).
+     */
+    @Query(value = "SELECT * FROM category WHERE id = :id", nativeQuery = true)
+    Optional<Category> findByIdIncludingDeleted(@Param("id") Long id);
 }

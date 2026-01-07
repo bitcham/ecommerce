@@ -6,13 +6,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import platform.ecommerce.domain.coupon.Coupon;
-import platform.ecommerce.dto.request.coupon.CouponSearchCondition;
 
 import java.util.List;
 import java.util.Optional;
 
 /**
  * Repository for Coupon aggregate root.
+ * Note: @SQLRestriction on Coupon entity automatically filters deleted records.
  */
 public interface CouponRepository extends JpaRepository<Coupon, Long>, CouponRepositoryCustom {
 
@@ -23,6 +23,17 @@ public interface CouponRepository extends JpaRepository<Coupon, Long>, CouponRep
     @Query("SELECT c FROM Coupon c WHERE c.active = true AND c.validTo > CURRENT_TIMESTAMP")
     List<Coupon> findAllActive();
 
-    @Query("SELECT c FROM Coupon c WHERE c.deletedAt IS NULL")
-    Page<Coupon> findAllNotDeleted(Pageable pageable);
+    // ========== Admin Methods (bypass @SQLRestriction) ==========
+
+    /**
+     * Find coupon by ID including deleted (for admin).
+     */
+    @Query(value = "SELECT * FROM coupon WHERE id = :id", nativeQuery = true)
+    Optional<Coupon> findByIdIncludingDeleted(@Param("id") Long id);
+
+    /**
+     * Find all deleted coupons (for admin).
+     */
+    @Query(value = "SELECT * FROM coupon WHERE deleted_at IS NOT NULL", nativeQuery = true)
+    List<Coupon> findAllDeleted();
 }

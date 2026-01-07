@@ -2,6 +2,7 @@ package platform.ecommerce.domain.member;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLRestriction;
 import platform.ecommerce.domain.common.BaseEntity;
 import platform.ecommerce.domain.common.SoftDeletable;
 import platform.ecommerce.exception.ErrorCode;
@@ -17,6 +18,7 @@ import java.util.List;
  */
 @Entity
 @Table(name = "member")
+@SQLRestriction("deleted_at IS NULL")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member extends BaseEntity implements SoftDeletable {

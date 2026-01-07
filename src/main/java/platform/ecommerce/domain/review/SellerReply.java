@@ -2,6 +2,7 @@ package platform.ecommerce.domain.review;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLRestriction;
 import platform.ecommerce.domain.common.BaseEntity;
 import platform.ecommerce.domain.common.SoftDeletable;
 import platform.ecommerce.exception.UnauthorizedReplyException;
@@ -20,6 +21,7 @@ import java.time.LocalDateTime;
 }, uniqueConstraints = {
         @UniqueConstraint(name = "uq_seller_reply_review", columnNames = {"review_id"})
 })
+@SQLRestriction("deleted_at IS NULL")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SellerReply extends BaseEntity implements SoftDeletable {

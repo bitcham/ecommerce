@@ -232,7 +232,7 @@ public class ReviewServiceImpl implements ReviewService {
     // ========== Private Helper Methods ==========
 
     private Review findReviewById(Long reviewId) {
-        return reviewRepository.findByIdNotDeleted(reviewId)
+        return reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.REVIEW_NOT_FOUND));
     }
 

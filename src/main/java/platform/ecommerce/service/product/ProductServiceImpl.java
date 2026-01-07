@@ -172,7 +172,7 @@ public class ProductServiceImpl implements ProductService {
     // ========== Private Helper Methods ==========
 
     private Product findProductById(Long productId) {
-        return productRepository.findByIdNotDeleted(productId)
+        return productRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
     }
 }

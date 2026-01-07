@@ -112,7 +112,7 @@ class CategoryServiceTest {
                     .build();
 
             given(categoryRepository.findBySlug("laptops")).willReturn(Optional.empty());
-            given(categoryRepository.findByIdNotDeleted(ROOT_ID)).willReturn(Optional.of(rootCategory));
+            given(categoryRepository.findById(ROOT_ID)).willReturn(Optional.of(rootCategory));
             given(categoryRepository.save(any(Category.class))).willAnswer(invocation -> {
                 Category category = invocation.getArgument(0);
                 ReflectionTestUtils.setField(category, "id", 3L);
@@ -157,7 +157,7 @@ class CategoryServiceTest {
                     .build();
 
             given(categoryRepository.findBySlug("child")).willReturn(Optional.empty());
-            given(categoryRepository.findByIdNotDeleted(999L)).willReturn(Optional.empty());
+            given(categoryRepository.findById(999L)).willReturn(Optional.empty());
 
             // when & then
             assertThatThrownBy(() -> categoryService.createCategory(request))
@@ -173,7 +173,7 @@ class CategoryServiceTest {
         @DisplayName("should return category by id")
         void returnCategoryById() {
             // given
-            given(categoryRepository.findByIdNotDeleted(ROOT_ID)).willReturn(Optional.of(rootCategory));
+            given(categoryRepository.findById(ROOT_ID)).willReturn(Optional.of(rootCategory));
             given(categoryRepository.countChildren(ROOT_ID)).willReturn(1);
 
             // when
@@ -189,7 +189,7 @@ class CategoryServiceTest {
         @DisplayName("should throw exception when not found")
         void throwOnNotFound() {
             // given
-            given(categoryRepository.findByIdNotDeleted(999L)).willReturn(Optional.empty());
+            given(categoryRepository.findById(999L)).willReturn(Optional.empty());
 
             // when & then
             assertThatThrownBy(() -> categoryService.getCategory(999L))
@@ -286,7 +286,7 @@ class CategoryServiceTest {
                     .displayOrder(2)
                     .build();
 
-            given(categoryRepository.findByIdNotDeleted(ROOT_ID)).willReturn(Optional.of(rootCategory));
+            given(categoryRepository.findById(ROOT_ID)).willReturn(Optional.of(rootCategory));
             given(categoryRepository.findBySlug("consumer-electronics")).willReturn(Optional.empty());
             given(categoryRepository.countChildren(ROOT_ID)).willReturn(1);
 
@@ -309,7 +309,7 @@ class CategoryServiceTest {
                     .displayOrder(1)
                     .build();
 
-            given(categoryRepository.findByIdNotDeleted(ROOT_ID)).willReturn(Optional.of(rootCategory));
+            given(categoryRepository.findById(ROOT_ID)).willReturn(Optional.of(rootCategory));
             given(categoryRepository.findBySlug("electronics")).willReturn(Optional.of(rootCategory));
             given(categoryRepository.countChildren(ROOT_ID)).willReturn(0);
 
@@ -336,8 +336,8 @@ class CategoryServiceTest {
                     .build();
             ReflectionTestUtils.setField(anotherRoot, "id", 3L);
 
-            given(categoryRepository.findByIdNotDeleted(CHILD_ID)).willReturn(Optional.of(childCategory));
-            given(categoryRepository.findByIdNotDeleted(3L)).willReturn(Optional.of(anotherRoot));
+            given(categoryRepository.findById(CHILD_ID)).willReturn(Optional.of(childCategory));
+            given(categoryRepository.findById(3L)).willReturn(Optional.of(anotherRoot));
             given(categoryRepository.countChildren(CHILD_ID)).willReturn(0);
 
             // when
@@ -352,7 +352,7 @@ class CategoryServiceTest {
         @DisplayName("should move category to root level")
         void moveCategoryToRoot() {
             // given
-            given(categoryRepository.findByIdNotDeleted(CHILD_ID)).willReturn(Optional.of(childCategory));
+            given(categoryRepository.findById(CHILD_ID)).willReturn(Optional.of(childCategory));
             given(categoryRepository.countChildren(CHILD_ID)).willReturn(0);
 
             // when
@@ -372,7 +372,7 @@ class CategoryServiceTest {
         @DisplayName("should delete category without children")
         void deleteCategoryWithoutChildren() {
             // given
-            given(categoryRepository.findByIdNotDeleted(CHILD_ID)).willReturn(Optional.of(childCategory));
+            given(categoryRepository.findById(CHILD_ID)).willReturn(Optional.of(childCategory));
             given(categoryRepository.hasChildren(CHILD_ID)).willReturn(false);
 
             // when
@@ -386,7 +386,7 @@ class CategoryServiceTest {
         @DisplayName("should throw exception when category has children")
         void throwOnHasChildren() {
             // given
-            given(categoryRepository.findByIdNotDeleted(ROOT_ID)).willReturn(Optional.of(rootCategory));
+            given(categoryRepository.findById(ROOT_ID)).willReturn(Optional.of(rootCategory));
             given(categoryRepository.hasChildren(ROOT_ID)).willReturn(true);
 
             // when & then
@@ -404,7 +404,7 @@ class CategoryServiceTest {
         void activateCategory() {
             // given
             childCategory.deactivate();
-            given(categoryRepository.findByIdNotDeleted(CHILD_ID)).willReturn(Optional.of(childCategory));
+            given(categoryRepository.findById(CHILD_ID)).willReturn(Optional.of(childCategory));
             given(categoryRepository.countChildren(CHILD_ID)).willReturn(0);
 
             // when
@@ -418,7 +418,7 @@ class CategoryServiceTest {
         @DisplayName("should deactivate category")
         void deactivateCategory() {
             // given
-            given(categoryRepository.findByIdNotDeleted(CHILD_ID)).willReturn(Optional.of(childCategory));
+            given(categoryRepository.findById(CHILD_ID)).willReturn(Optional.of(childCategory));
             given(categoryRepository.countChildren(CHILD_ID)).willReturn(0);
 
             // when

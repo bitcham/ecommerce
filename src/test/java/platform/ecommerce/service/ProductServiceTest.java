@@ -82,7 +82,7 @@ class ProductServiceTest {
             Product product = createProduct();
             setId(product, productId);
 
-            given(productRepository.findByIdNotDeleted(productId)).willReturn(Optional.of(product));
+            given(productRepository.findById(productId)).willReturn(Optional.of(product));
 
             // when
             Product result = productService.getProduct(productId);
@@ -97,7 +97,7 @@ class ProductServiceTest {
         void getProduct_withInvalidId_shouldThrowException() {
             // given
             Long productId = 999L;
-            given(productRepository.findByIdNotDeleted(productId)).willReturn(Optional.empty());
+            given(productRepository.findById(productId)).willReturn(Optional.empty());
 
             // when & then
             assertThatThrownBy(() -> productService.getProduct(productId))
@@ -148,7 +148,7 @@ class ProductServiceTest {
                     .basePrice(new BigDecimal("20000"))
                     .build();
 
-            given(productRepository.findByIdNotDeleted(productId)).willReturn(Optional.of(product));
+            given(productRepository.findById(productId)).willReturn(Optional.of(product));
 
             // when
             Product result = productService.updateProduct(productId, request);
@@ -172,7 +172,7 @@ class ProductServiceTest {
             setId(product, productId);
             product.addOption(OptionType.SIZE, "M", BigDecimal.ZERO, 10);
 
-            given(productRepository.findByIdNotDeleted(productId)).willReturn(Optional.of(product));
+            given(productRepository.findById(productId)).willReturn(Optional.of(product));
 
             // when
             Product result = productService.publishProduct(productId);
@@ -190,7 +190,7 @@ class ProductServiceTest {
             Product product = createProduct();
             setId(product, productId);
 
-            given(productRepository.findByIdNotDeleted(productId)).willReturn(Optional.of(product));
+            given(productRepository.findById(productId)).willReturn(Optional.of(product));
 
             // when & then
             assertThatThrownBy(() -> productService.publishProduct(productId))
@@ -217,7 +217,7 @@ class ProductServiceTest {
                     .stock(10)
                     .build();
 
-            given(productRepository.findByIdNotDeleted(productId)).willReturn(Optional.of(product));
+            given(productRepository.findById(productId)).willReturn(Optional.of(product));
 
             // when
             ProductOption result = productService.addOption(productId, request);
@@ -245,7 +245,7 @@ class ProductServiceTest {
             ProductOption option = product.addOption(OptionType.SIZE, "M", BigDecimal.ZERO, 10);
             setId(option, optionId);
 
-            given(productRepository.findByIdNotDeleted(productId)).willReturn(Optional.of(product));
+            given(productRepository.findById(productId)).willReturn(Optional.of(product));
 
             // when
             productService.decreaseStock(productId, optionId, 3);
@@ -266,7 +266,7 @@ class ProductServiceTest {
             ProductOption option = product.addOption(OptionType.SIZE, "M", BigDecimal.ZERO, 5);
             setId(option, optionId);
 
-            given(productRepository.findByIdNotDeleted(productId)).willReturn(Optional.of(product));
+            given(productRepository.findById(productId)).willReturn(Optional.of(product));
 
             // when & then
             assertThatThrownBy(() -> productService.decreaseStock(productId, optionId, 10))
@@ -286,7 +286,7 @@ class ProductServiceTest {
             Product product = createProduct();
             setId(product, productId);
 
-            given(productRepository.findByIdNotDeleted(productId)).willReturn(Optional.of(product));
+            given(productRepository.findById(productId)).willReturn(Optional.of(product));
 
             // when
             ProductImage result = productService.addImage(productId, "http://example.com/image.jpg", "Alt");
@@ -310,7 +310,7 @@ class ProductServiceTest {
             Product product = createProduct();
             setId(product, productId);
 
-            given(productRepository.findByIdNotDeleted(productId)).willReturn(Optional.of(product));
+            given(productRepository.findById(productId)).willReturn(Optional.of(product));
 
             // when
             productService.deleteProduct(productId);

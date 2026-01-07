@@ -2,6 +2,7 @@ package platform.ecommerce.domain.coupon;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLRestriction;
 import platform.ecommerce.domain.common.BaseEntity;
 import platform.ecommerce.domain.common.SoftDeletable;
 import platform.ecommerce.exception.ErrorCode;
@@ -19,6 +20,7 @@ import java.time.LocalDateTime;
 @Table(name = "coupon", indexes = {
         @Index(name = "idx_coupon_code", columnList = "code")
 })
+@SQLRestriction("deleted_at IS NULL")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Coupon extends BaseEntity implements SoftDeletable {

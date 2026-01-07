@@ -7,10 +7,12 @@ import platform.ecommerce.domain.member.Member;
 import platform.ecommerce.domain.member.MemberStatus;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 /**
  * Member JPA repository.
+ * Note: @SQLRestriction on Member entity automatically filters deleted records.
  */
 public interface MemberRepository extends JpaRepository<Member, Long>, MemberQueryRepository {
 
@@ -42,4 +44,24 @@ public interface MemberRepository extends JpaRepository<Member, Long>, MemberQue
      */
     @Query("SELECT COUNT(m) FROM Member m WHERE m.createdAt BETWEEN :from AND :to")
     long countByCreatedAtBetween(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
+    // ========== Admin Methods (bypass @SQLRestriction) ==========
+
+    /**
+     * Find member by ID including deleted (for admin).
+     */
+    @Query(value = "SELECT * FROM member WHERE id = :id", nativeQuery = true)
+    Optional<Member> findByIdIncludingDeleted(@Param("id") Long id);
+
+    /**
+     * Find member by email including deleted (for admin).
+     */
+    @Query(value = "SELECT * FROM member WHERE email = :email", nativeQuery = true)
+    Optional<Member> findByEmailIncludingDeleted(@Param("email") String email);
+
+    /**
+     * Find all deleted members (for admin).
+     */
+    @Query(value = "SELECT * FROM member WHERE deleted_at IS NOT NULL", nativeQuery = true)
+    List<Member> findAllDeleted();
 }

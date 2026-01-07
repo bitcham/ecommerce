@@ -100,9 +100,9 @@ class SellerReplyServiceTest {
         @DisplayName("should create reply and return Entity")
         void createReplySuccessfully() {
             // given
-            given(reviewRepository.findByIdNotDeleted(REVIEW_ID)).willReturn(Optional.of(testReview));
+            given(reviewRepository.findById(REVIEW_ID)).willReturn(Optional.of(testReview));
             given(productRepository.findById(PRODUCT_ID)).willReturn(Optional.of(testProduct));
-            given(replyRepository.existsByReviewIdAndDeletedAtIsNull(REVIEW_ID)).willReturn(false);
+            given(replyRepository.existsByReviewId(REVIEW_ID)).willReturn(false);
             given(replyRepository.save(any(SellerReply.class))).willAnswer(invocation -> {
                 SellerReply reply = invocation.getArgument(0);
                 ReflectionTestUtils.setField(reply, "id", REPLY_ID);
@@ -124,7 +124,7 @@ class SellerReplyServiceTest {
         @DisplayName("should throw EntityNotFoundException when review not found")
         void throwOnReviewNotFound() {
             // given
-            given(reviewRepository.findByIdNotDeleted(REVIEW_ID)).willReturn(Optional.empty());
+            given(reviewRepository.findById(REVIEW_ID)).willReturn(Optional.empty());
 
             // when & then
             assertThatThrownBy(() -> sellerReplyService.createReply(REVIEW_ID, SELLER_ID, CONTENT))
@@ -136,7 +136,7 @@ class SellerReplyServiceTest {
         @DisplayName("should throw UnauthorizedReplyException when not product owner")
         void throwOnNotProductOwner() {
             // given
-            given(reviewRepository.findByIdNotDeleted(REVIEW_ID)).willReturn(Optional.of(testReview));
+            given(reviewRepository.findById(REVIEW_ID)).willReturn(Optional.of(testReview));
             given(productRepository.findById(PRODUCT_ID)).willReturn(Optional.of(testProduct));
 
             // when & then
@@ -148,9 +148,9 @@ class SellerReplyServiceTest {
         @DisplayName("should throw DuplicateReplyException when reply already exists")
         void throwOnDuplicateReply() {
             // given
-            given(reviewRepository.findByIdNotDeleted(REVIEW_ID)).willReturn(Optional.of(testReview));
+            given(reviewRepository.findById(REVIEW_ID)).willReturn(Optional.of(testReview));
             given(productRepository.findById(PRODUCT_ID)).willReturn(Optional.of(testProduct));
-            given(replyRepository.existsByReviewIdAndDeletedAtIsNull(REVIEW_ID)).willReturn(true);
+            given(replyRepository.existsByReviewId(REVIEW_ID)).willReturn(true);
 
             // when & then
             assertThatThrownBy(() -> sellerReplyService.createReply(REVIEW_ID, SELLER_ID, CONTENT))
@@ -161,9 +161,9 @@ class SellerReplyServiceTest {
         @DisplayName("should throw IllegalArgumentException when content is empty")
         void throwOnEmptyContent() {
             // given
-            given(reviewRepository.findByIdNotDeleted(REVIEW_ID)).willReturn(Optional.of(testReview));
+            given(reviewRepository.findById(REVIEW_ID)).willReturn(Optional.of(testReview));
             given(productRepository.findById(PRODUCT_ID)).willReturn(Optional.of(testProduct));
-            given(replyRepository.existsByReviewIdAndDeletedAtIsNull(REVIEW_ID)).willReturn(false);
+            given(replyRepository.existsByReviewId(REVIEW_ID)).willReturn(false);
 
             // when & then
             assertThatThrownBy(() -> sellerReplyService.createReply(REVIEW_ID, SELLER_ID, ""))
@@ -182,7 +182,7 @@ class SellerReplyServiceTest {
         @DisplayName("should return reply Entity when exists")
         void returnReplyWhenExists() {
             // given
-            given(replyRepository.findByReviewIdNotDeleted(REVIEW_ID)).willReturn(Optional.of(testReply));
+            given(replyRepository.findByReviewId(REVIEW_ID)).willReturn(Optional.of(testReply));
 
             // when
             SellerReply result = sellerReplyService.getReply(REVIEW_ID);
@@ -197,7 +197,7 @@ class SellerReplyServiceTest {
         @DisplayName("should throw EntityNotFoundException when not found")
         void throwOnNotFound() {
             // given
-            given(replyRepository.findByReviewIdNotDeleted(REVIEW_ID)).willReturn(Optional.empty());
+            given(replyRepository.findByReviewId(REVIEW_ID)).willReturn(Optional.empty());
 
             // when & then
             assertThatThrownBy(() -> sellerReplyService.getReply(REVIEW_ID))
@@ -214,7 +214,7 @@ class SellerReplyServiceTest {
         @DisplayName("should return Optional with reply when exists")
         void returnOptionalWithReply() {
             // given
-            given(replyRepository.findByReviewIdNotDeleted(REVIEW_ID)).willReturn(Optional.of(testReply));
+            given(replyRepository.findByReviewId(REVIEW_ID)).willReturn(Optional.of(testReply));
 
             // when
             Optional<SellerReply> result = sellerReplyService.getReplyOptional(REVIEW_ID);
@@ -228,7 +228,7 @@ class SellerReplyServiceTest {
         @DisplayName("should return empty Optional when not exists")
         void returnEmptyOptional() {
             // given
-            given(replyRepository.findByReviewIdNotDeleted(REVIEW_ID)).willReturn(Optional.empty());
+            given(replyRepository.findByReviewId(REVIEW_ID)).willReturn(Optional.empty());
 
             // when
             Optional<SellerReply> result = sellerReplyService.getReplyOptional(REVIEW_ID);
@@ -251,7 +251,7 @@ class SellerReplyServiceTest {
         @DisplayName("should update reply and return Entity")
         void updateReplySuccessfully() {
             // given
-            given(replyRepository.findByReviewIdNotDeleted(REVIEW_ID)).willReturn(Optional.of(testReply));
+            given(replyRepository.findByReviewId(REVIEW_ID)).willReturn(Optional.of(testReply));
 
             // when
             SellerReply result = sellerReplyService.updateReply(REVIEW_ID, SELLER_ID, NEW_CONTENT);
@@ -265,7 +265,7 @@ class SellerReplyServiceTest {
         @DisplayName("should throw UnauthorizedReplyException when not owner")
         void throwOnNotOwner() {
             // given
-            given(replyRepository.findByReviewIdNotDeleted(REVIEW_ID)).willReturn(Optional.of(testReply));
+            given(replyRepository.findByReviewId(REVIEW_ID)).willReturn(Optional.of(testReply));
 
             // when & then
             assertThatThrownBy(() -> sellerReplyService.updateReply(REVIEW_ID, OTHER_SELLER_ID, NEW_CONTENT))
@@ -276,7 +276,7 @@ class SellerReplyServiceTest {
         @DisplayName("should throw EntityNotFoundException when reply not found")
         void throwOnReplyNotFound() {
             // given
-            given(replyRepository.findByReviewIdNotDeleted(REVIEW_ID)).willReturn(Optional.empty());
+            given(replyRepository.findByReviewId(REVIEW_ID)).willReturn(Optional.empty());
 
             // when & then
             assertThatThrownBy(() -> sellerReplyService.updateReply(REVIEW_ID, SELLER_ID, NEW_CONTENT))
@@ -295,7 +295,7 @@ class SellerReplyServiceTest {
         @DisplayName("should soft delete reply")
         void deleteReplySuccessfully() {
             // given
-            given(replyRepository.findByReviewIdNotDeleted(REVIEW_ID)).willReturn(Optional.of(testReply));
+            given(replyRepository.findByReviewId(REVIEW_ID)).willReturn(Optional.of(testReply));
 
             // when
             sellerReplyService.deleteReply(REVIEW_ID, SELLER_ID);
@@ -308,7 +308,7 @@ class SellerReplyServiceTest {
         @DisplayName("should throw UnauthorizedReplyException when not owner")
         void throwOnNotOwner() {
             // given
-            given(replyRepository.findByReviewIdNotDeleted(REVIEW_ID)).willReturn(Optional.of(testReply));
+            given(replyRepository.findByReviewId(REVIEW_ID)).willReturn(Optional.of(testReply));
 
             // when & then
             assertThatThrownBy(() -> sellerReplyService.deleteReply(REVIEW_ID, OTHER_SELLER_ID))
@@ -330,7 +330,7 @@ class SellerReplyServiceTest {
             SellerReplyHistory history1 = SellerReplyHistory.create(REPLY_ID, "첫 번째 내용", SELLER_ID);
             SellerReplyHistory history2 = SellerReplyHistory.create(REPLY_ID, "두 번째 내용", SELLER_ID);
 
-            given(replyRepository.findByReviewIdNotDeleted(REVIEW_ID)).willReturn(Optional.of(testReply));
+            given(replyRepository.findByReviewId(REVIEW_ID)).willReturn(Optional.of(testReply));
             given(historyRepository.findBySellerReplyIdOrderByModifiedAtDesc(REPLY_ID))
                     .willReturn(List.of(history2, history1));
 
@@ -346,7 +346,7 @@ class SellerReplyServiceTest {
         @DisplayName("should return empty list when no history")
         void returnEmptyListWhenNoHistory() {
             // given
-            given(replyRepository.findByReviewIdNotDeleted(REVIEW_ID)).willReturn(Optional.of(testReply));
+            given(replyRepository.findByReviewId(REVIEW_ID)).willReturn(Optional.of(testReply));
             given(historyRepository.findBySellerReplyIdOrderByModifiedAtDesc(REPLY_ID))
                     .willReturn(List.of());
 
@@ -369,7 +369,7 @@ class SellerReplyServiceTest {
         @DisplayName("should soft delete reply when review is deleted")
         void deleteReplyWhenReviewDeleted() {
             // given
-            given(replyRepository.findByReviewIdNotDeleted(REVIEW_ID)).willReturn(Optional.of(testReply));
+            given(replyRepository.findByReviewId(REVIEW_ID)).willReturn(Optional.of(testReply));
 
             // when
             sellerReplyService.deleteByReviewId(REVIEW_ID);
@@ -382,7 +382,7 @@ class SellerReplyServiceTest {
         @DisplayName("should do nothing when no reply exists")
         void doNothingWhenNoReply() {
             // given
-            given(replyRepository.findByReviewIdNotDeleted(REVIEW_ID)).willReturn(Optional.empty());
+            given(replyRepository.findByReviewId(REVIEW_ID)).willReturn(Optional.empty());
 
             // when & then (no exception)
             assertThatCode(() -> sellerReplyService.deleteByReviewId(REVIEW_ID))

@@ -10,35 +10,43 @@ import java.util.Optional;
 
 /**
  * Repository for SellerReply aggregate root.
+ * Note: @SQLRestriction on SellerReply entity automatically filters deleted records.
  */
 public interface SellerReplyRepository extends JpaRepository<SellerReply, Long> {
 
     /**
-     * Find reply by review ID (excluding soft-deleted).
+     * Find reply by review ID.
      */
-    @Query("SELECT sr FROM SellerReply sr WHERE sr.reviewId = :reviewId AND sr.deletedAt IS NULL")
-    Optional<SellerReply> findByReviewIdNotDeleted(@Param("reviewId") Long reviewId);
+    Optional<SellerReply> findByReviewId(Long reviewId);
 
     /**
-     * Check if reply exists for review (excluding soft-deleted).
+     * Check if reply exists for review.
      */
-    boolean existsByReviewIdAndDeletedAtIsNull(Long reviewId);
+    boolean existsByReviewId(Long reviewId);
 
     /**
      * Find replies by review IDs (for batch loading).
      */
-    @Query("SELECT sr FROM SellerReply sr WHERE sr.reviewId IN :reviewIds AND sr.deletedAt IS NULL")
-    List<SellerReply> findByReviewIdInNotDeleted(@Param("reviewIds") List<Long> reviewIds);
+    @Query("SELECT sr FROM SellerReply sr WHERE sr.reviewId IN :reviewIds")
+    List<SellerReply> findByReviewIdIn(@Param("reviewIds") List<Long> reviewIds);
 
     /**
-     * Find replies by seller ID (excluding soft-deleted).
+     * Find replies by seller ID.
      */
-    @Query("SELECT sr FROM SellerReply sr WHERE sr.sellerId = :sellerId AND sr.deletedAt IS NULL ORDER BY sr.createdAt DESC")
-    List<SellerReply> findBySellerIdNotDeleted(@Param("sellerId") Long sellerId);
+    @Query("SELECT sr FROM SellerReply sr WHERE sr.sellerId = :sellerId ORDER BY sr.createdAt DESC")
+    List<SellerReply> findBySellerId(@Param("sellerId") Long sellerId);
 
     /**
-     * Count replies by seller ID (excluding soft-deleted).
+     * Count replies by seller ID.
      */
-    @Query("SELECT COUNT(sr) FROM SellerReply sr WHERE sr.sellerId = :sellerId AND sr.deletedAt IS NULL")
-    long countBySellerIdNotDeleted(@Param("sellerId") Long sellerId);
+    @Query("SELECT COUNT(sr) FROM SellerReply sr WHERE sr.sellerId = :sellerId")
+    long countBySellerId(@Param("sellerId") Long sellerId);
+
+    // ========== Admin Methods (bypass @SQLRestriction) ==========
+
+    /**
+     * Find seller reply by ID including deleted (for admin).
+     */
+    @Query(value = "SELECT * FROM seller_reply WHERE id = :id", nativeQuery = true)
+    Optional<SellerReply> findByIdIncludingDeleted(@Param("id") Long id);
 }

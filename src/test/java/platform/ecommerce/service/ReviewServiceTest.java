@@ -145,7 +145,7 @@ class ReviewServiceTest {
         @DisplayName("should return review by id")
         void returnReviewById() {
             // given
-            given(reviewRepository.findByIdNotDeleted(REVIEW_ID)).willReturn(Optional.of(testReview));
+            given(reviewRepository.findById(REVIEW_ID)).willReturn(Optional.of(testReview));
 
             // when
             ReviewResponse response = reviewService.getReview(REVIEW_ID);
@@ -159,7 +159,7 @@ class ReviewServiceTest {
         @DisplayName("should throw exception when not found")
         void throwOnNotFound() {
             // given
-            given(reviewRepository.findByIdNotDeleted(999L)).willReturn(Optional.empty());
+            given(reviewRepository.findById(999L)).willReturn(Optional.empty());
 
             // when & then
             assertThatThrownBy(() -> reviewService.getReview(999L))
@@ -223,7 +223,7 @@ class ReviewServiceTest {
                     .images(List.of("new-image.jpg"))
                     .build();
 
-            given(reviewRepository.findByIdNotDeleted(REVIEW_ID)).willReturn(Optional.of(testReview));
+            given(reviewRepository.findById(REVIEW_ID)).willReturn(Optional.of(testReview));
 
             // when
             ReviewResponse response = reviewService.updateReview(REVIEW_ID, MEMBER_ID, request);
@@ -242,7 +242,7 @@ class ReviewServiceTest {
                     .title("Hacked")
                     .build();
 
-            given(reviewRepository.findByIdNotDeleted(REVIEW_ID)).willReturn(Optional.of(testReview));
+            given(reviewRepository.findById(REVIEW_ID)).willReturn(Optional.of(testReview));
 
             // when & then
             assertThatThrownBy(() -> reviewService.updateReview(REVIEW_ID, 999L, request))
@@ -258,7 +258,7 @@ class ReviewServiceTest {
         @DisplayName("should delete review")
         void deleteReviewSuccessfully() {
             // given
-            given(reviewRepository.findByIdNotDeleted(REVIEW_ID)).willReturn(Optional.of(testReview));
+            given(reviewRepository.findById(REVIEW_ID)).willReturn(Optional.of(testReview));
 
             // when
             reviewService.deleteReview(REVIEW_ID, MEMBER_ID);
@@ -271,7 +271,7 @@ class ReviewServiceTest {
         @DisplayName("should throw exception when not owner")
         void throwOnNotOwner() {
             // given
-            given(reviewRepository.findByIdNotDeleted(REVIEW_ID)).willReturn(Optional.of(testReview));
+            given(reviewRepository.findById(REVIEW_ID)).willReturn(Optional.of(testReview));
 
             // when & then
             assertThatThrownBy(() -> reviewService.deleteReview(REVIEW_ID, 999L))
@@ -287,7 +287,7 @@ class ReviewServiceTest {
         @DisplayName("should increment helpful count")
         void incrementHelpfulCount() {
             // given
-            given(reviewRepository.findByIdNotDeleted(REVIEW_ID)).willReturn(Optional.of(testReview));
+            given(reviewRepository.findById(REVIEW_ID)).willReturn(Optional.of(testReview));
             int originalCount = testReview.getHelpfulCount();
 
             // when

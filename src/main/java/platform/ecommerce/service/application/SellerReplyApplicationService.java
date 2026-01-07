@@ -134,7 +134,7 @@ public class SellerReplyApplicationService {
     // ========== Private Helper Methods ==========
 
     private void validateProductOwnership(Long reviewId, Long sellerId) {
-        Review review = reviewRepository.findByIdNotDeleted(reviewId)
+        Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new EntityNotFoundException(
                         ErrorCode.REVIEW_NOT_FOUND,
                         String.format("Review not found: %d", reviewId)));

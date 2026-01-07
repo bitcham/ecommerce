@@ -11,33 +11,42 @@ import java.util.Optional;
 
 /**
  * Product JPA repository.
+ * Note: @SQLRestriction on Product entity automatically filters deleted records.
  */
 public interface ProductRepository extends JpaRepository<Product, Long>, ProductQueryRepository {
 
     /**
-     * Find product by ID excluding deleted.
-     */
-    @Query("SELECT p FROM Product p WHERE p.id = :id AND p.deletedAt IS NULL")
-    Optional<Product> findByIdNotDeleted(@Param("id") Long id);
-
-    /**
      * Find products by seller.
      */
-    List<Product> findBySellerIdAndDeletedAtIsNull(Long sellerId);
+    List<Product> findBySellerId(Long sellerId);
 
     /**
      * Find products by category.
      */
-    List<Product> findByCategoryIdAndDeletedAtIsNull(Long categoryId);
+    List<Product> findByCategoryId(Long categoryId);
 
     /**
      * Find products by status.
      */
-    List<Product> findByStatusAndDeletedAtIsNull(ProductStatus status);
+    List<Product> findByStatus(ProductStatus status);
 
     /**
      * Check if product name exists for seller.
      */
-    @Query("SELECT COUNT(p) > 0 FROM Product p WHERE p.name = :name AND p.sellerId = :sellerId AND p.deletedAt IS NULL")
+    @Query("SELECT COUNT(p) > 0 FROM Product p WHERE p.name = :name AND p.sellerId = :sellerId")
     boolean existsByNameAndSellerId(@Param("name") String name, @Param("sellerId") Long sellerId);
+
+    // ========== Admin Methods (bypass @SQLRestriction) ==========
+
+    /**
+     * Find product by ID including deleted (for admin).
+     */
+    @Query(value = "SELECT * FROM product WHERE id = :id", nativeQuery = true)
+    Optional<Product> findByIdIncludingDeleted(@Param("id") Long id);
+
+    /**
+     * Find all deleted products (for admin).
+     */
+    @Query(value = "SELECT * FROM product WHERE deleted_at IS NOT NULL", nativeQuery = true)
+    List<Product> findAllDeleted();
 }

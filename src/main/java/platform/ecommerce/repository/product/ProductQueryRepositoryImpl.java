@@ -21,6 +21,7 @@ import static platform.ecommerce.domain.product.QProduct.product;
 
 /**
  * Product QueryDSL repository implementation.
+ * Note: @SQLRestriction on Product entity automatically filters deleted records.
  */
 @Repository
 @RequiredArgsConstructor
@@ -39,8 +40,7 @@ public class ProductQueryRepositoryImpl implements ProductQueryRepository {
                         sellerEquals(condition.sellerId()),
                         statusEquals(condition.status()),
                         priceGoe(condition.minPrice()),
-                        priceLoe(condition.maxPrice()),
-                        excludeDeleted(condition.excludeDeleted())
+                        priceLoe(condition.maxPrice())
                 )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -57,8 +57,7 @@ public class ProductQueryRepositoryImpl implements ProductQueryRepository {
                         sellerEquals(condition.sellerId()),
                         statusEquals(condition.status()),
                         priceGoe(condition.minPrice()),
-                        priceLoe(condition.maxPrice()),
-                        excludeDeleted(condition.excludeDeleted())
+                        priceLoe(condition.maxPrice())
                 );
 
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
@@ -95,10 +94,6 @@ public class ProductQueryRepositoryImpl implements ProductQueryRepository {
 
     private BooleanExpression priceLoe(BigDecimal maxPrice) {
         return maxPrice != null ? product.basePrice.loe(maxPrice) : null;
-    }
-
-    private BooleanExpression excludeDeleted(Boolean exclude) {
-        return Boolean.TRUE.equals(exclude) ? product.deletedAt.isNull() : null;
     }
 
     private OrderSpecifier<?> getOrderSpecifier(ProductSortType sortType) {

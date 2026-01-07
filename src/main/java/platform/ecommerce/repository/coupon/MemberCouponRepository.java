@@ -12,6 +12,7 @@ import java.util.Optional;
 
 /**
  * Repository for MemberCoupon entity.
+ * Note: Coupon's @SQLRestriction automatically filters deleted coupons in JOIN queries.
  */
 public interface MemberCouponRepository extends JpaRepository<MemberCoupon, Long> {
 

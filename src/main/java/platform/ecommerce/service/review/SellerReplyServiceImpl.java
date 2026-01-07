@@ -45,7 +45,7 @@ public class SellerReplyServiceImpl implements SellerReplyService {
         validateProductOwnership(review.getProductId(), sellerId, reviewId);
 
         // 3. Check for duplicate reply
-        if (replyRepository.existsByReviewIdAndDeletedAtIsNull(reviewId)) {
+        if (replyRepository.existsByReviewId(reviewId)) {
             throw DuplicateReplyException.forReview(reviewId);
         }
 
@@ -59,7 +59,7 @@ public class SellerReplyServiceImpl implements SellerReplyService {
 
     @Override
     public SellerReply getReply(Long reviewId) {
-        return replyRepository.findByReviewIdNotDeleted(reviewId)
+        return replyRepository.findByReviewId(reviewId)
                 .orElseThrow(() -> new EntityNotFoundException(
                         ErrorCode.SELLER_REPLY_NOT_FOUND,
                         String.format("SellerReply not found for review: %d", reviewId)));
@@ -67,7 +67,7 @@ public class SellerReplyServiceImpl implements SellerReplyService {
 
     @Override
     public Optional<SellerReply> getReplyOptional(Long reviewId) {
-        return replyRepository.findByReviewIdNotDeleted(reviewId);
+        return replyRepository.findByReviewId(reviewId);
     }
 
     @Override
@@ -96,7 +96,7 @@ public class SellerReplyServiceImpl implements SellerReplyService {
     @Override
     @Transactional
     public void deleteByReviewId(Long reviewId) {
-        replyRepository.findByReviewIdNotDeleted(reviewId)
+        replyRepository.findByReviewId(reviewId)
                 .ifPresent(reply -> {
                     reply.delete();
                     log.info("Seller reply deleted due to review deletion: reviewId={}", reviewId);
@@ -112,7 +112,7 @@ public class SellerReplyServiceImpl implements SellerReplyService {
     // ========== Private Helper Methods ==========
 
     private Review findReviewById(Long reviewId) {
-        return reviewRepository.findByIdNotDeleted(reviewId)
+        return reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new EntityNotFoundException(
                         ErrorCode.REVIEW_NOT_FOUND,
                         String.format("Review not found: %d", reviewId)));
