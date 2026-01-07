@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import platform.ecommerce.dto.request.*;
 import platform.ecommerce.dto.response.*;
-import platform.ecommerce.service.AuthService;
+import platform.ecommerce.service.application.AuthApplicationService;
 
 /**
  * Authentication REST controller.
@@ -22,7 +22,7 @@ import platform.ecommerce.service.AuthService;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
+    private final AuthApplicationService authApplicationService;
 
     @Operation(summary = "Register", description = "Register a new member account")
     @PostMapping("/register")
@@ -31,7 +31,7 @@ public class AuthController {
     public ApiResponse<MemberResponse> register(
             @Valid @RequestBody MemberCreateRequest request
     ) {
-        MemberResponse response = authService.register(request);
+        MemberResponse response = authApplicationService.register(request);
         return ApiResponse.created(response);
     }
 
@@ -42,7 +42,7 @@ public class AuthController {
             @Valid @RequestBody LoginRequest request,
             HttpServletRequest httpRequest
     ) {
-        LoginResponse response = authService.login(request, httpRequest);
+        LoginResponse response = authApplicationService.login(request, httpRequest);
         return ApiResponse.success(response);
     }
 
@@ -52,7 +52,7 @@ public class AuthController {
     public ApiResponse<TokenResponse> refreshToken(
             @Valid @RequestBody TokenRefreshRequest request
     ) {
-        TokenResponse response = authService.refreshToken(request);
+        TokenResponse response = authApplicationService.refreshToken(request);
         return ApiResponse.success(response);
     }
 
@@ -62,7 +62,7 @@ public class AuthController {
     public void logout(
             @RequestBody TokenRefreshRequest request
     ) {
-        authService.logout(request.refreshToken());
+        authApplicationService.logout(request.refreshToken());
     }
 
     @Operation(summary = "Logout all devices", description = "Revoke all refresh tokens for member")
@@ -71,7 +71,7 @@ public class AuthController {
     public void logoutAll(
             @Parameter(description = "Member ID") @RequestParam Long memberId
     ) {
-        authService.logoutAll(memberId);
+        authApplicationService.logoutAll(memberId);
     }
 
     @Operation(summary = "Verify email", description = "Verify email with token")
@@ -80,7 +80,7 @@ public class AuthController {
     public ApiResponse<String> verifyEmail(
             @Parameter(description = "Verification token") @RequestParam String token
     ) {
-        authService.verifyEmail(token);
+        authApplicationService.verifyEmail(token);
         return ApiResponse.success("Email verified successfully");
     }
 
@@ -91,7 +91,7 @@ public class AuthController {
     public void resendVerificationEmail(
             @Valid @RequestBody EmailVerificationRequest request
     ) {
-        authService.resendVerificationEmail(request.email());
+        authApplicationService.resendVerificationEmail(request.email());
     }
 
     @Operation(summary = "Request password reset", description = "Request password reset email")
@@ -101,7 +101,7 @@ public class AuthController {
     public void requestPasswordReset(
             @Valid @RequestBody EmailVerificationRequest request
     ) {
-        authService.requestPasswordReset(request.email());
+        authApplicationService.requestPasswordReset(request.email());
     }
 
     @Operation(summary = "Reset password", description = "Reset password with token")
@@ -110,7 +110,7 @@ public class AuthController {
     public ApiResponse<String> resetPassword(
             @Valid @RequestBody PasswordResetRequest request
     ) {
-        authService.resetPassword(request.token(), request.newPassword());
+        authApplicationService.resetPassword(request.token(), request.newPassword());
         return ApiResponse.success("Password reset successfully");
     }
 }

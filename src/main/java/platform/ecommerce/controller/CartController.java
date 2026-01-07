@@ -11,7 +11,7 @@ import platform.ecommerce.dto.request.cart.*;
 import platform.ecommerce.dto.response.*;
 import platform.ecommerce.dto.response.cart.*;
 import platform.ecommerce.security.SecurityUtils;
-import platform.ecommerce.service.cart.CartService;
+import platform.ecommerce.service.application.CartApplicationService;
 
 /**
  * Cart REST controller.
@@ -22,13 +22,13 @@ import platform.ecommerce.service.cart.CartService;
 @RequiredArgsConstructor
 public class CartController {
 
-    private final CartService cartService;
+    private final CartApplicationService cartApplicationService;
 
     @Operation(summary = "Get cart", description = "Get shopping cart for authenticated member")
     @GetMapping
     public ApiResponse<CartResponse> getCart() {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        CartResponse response = cartService.getCartSummary(memberId);
+        CartResponse response = cartApplicationService.getCartSummary(memberId);
         return ApiResponse.success(response);
     }
 
@@ -39,7 +39,7 @@ public class CartController {
             @Valid @RequestBody CartItemAddRequest request
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        CartItemResponse response = cartService.addToCart(memberId, request);
+        CartItemResponse response = cartApplicationService.addToCart(memberId, request);
         return ApiResponse.created(response);
     }
 
@@ -50,7 +50,7 @@ public class CartController {
             @Valid @RequestBody CartItemUpdateRequest request
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        CartItemResponse response = cartService.updateQuantity(memberId, itemId, request.quantity());
+        CartItemResponse response = cartApplicationService.updateQuantity(memberId, itemId, request.quantity());
         return ApiResponse.success(response);
     }
 
@@ -61,7 +61,7 @@ public class CartController {
             @Parameter(description = "Cart item ID") @PathVariable Long itemId
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        cartService.removeFromCart(memberId, itemId);
+        cartApplicationService.removeFromCart(memberId, itemId);
     }
 
     @Operation(summary = "Clear cart", description = "Remove all items from cart")
@@ -69,6 +69,6 @@ public class CartController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void clearCart() {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        cartService.clearCart(memberId);
+        cartApplicationService.clearCart(memberId);
     }
 }

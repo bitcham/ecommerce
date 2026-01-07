@@ -13,7 +13,7 @@ import platform.ecommerce.dto.request.payment.PaymentRequestDto;
 import platform.ecommerce.dto.response.ApiResponse;
 import platform.ecommerce.dto.response.payment.PaymentResponse;
 import platform.ecommerce.security.SecurityUtils;
-import platform.ecommerce.service.payment.PaymentService;
+import platform.ecommerce.service.application.PaymentApplicationService;
 
 import java.util.List;
 
@@ -26,7 +26,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PaymentController {
 
-    private final PaymentService paymentService;
+    private final PaymentApplicationService paymentApplicationService;
 
     @Operation(summary = "Request payment", description = "Request payment for an order")
     @PostMapping("/request")
@@ -35,7 +35,7 @@ public class PaymentController {
     public ApiResponse<PaymentResponse> requestPayment(
             @Valid @RequestBody PaymentRequestDto request
     ) {
-        PaymentResponse response = paymentService.requestPayment(request.orderId(), request.method());
+        PaymentResponse response = paymentApplicationService.requestPayment(request.orderId(), request.method());
         return ApiResponse.created(response);
     }
 
@@ -45,7 +45,7 @@ public class PaymentController {
     public ApiResponse<PaymentResponse> confirmPayment(
             @Valid @RequestBody PaymentConfirmRequest request
     ) {
-        PaymentResponse response = paymentService.confirmPayment(
+        PaymentResponse response = paymentApplicationService.confirmPayment(
                 request.transactionId(),
                 request.amount()
         );
@@ -59,7 +59,7 @@ public class PaymentController {
             @Parameter(description = "Payment ID") @PathVariable Long paymentId
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        PaymentResponse response = paymentService.cancelPayment(paymentId, memberId);
+        PaymentResponse response = paymentApplicationService.cancelPayment(paymentId, memberId);
         return ApiResponse.success(response);
     }
 
@@ -70,7 +70,7 @@ public class PaymentController {
             @Parameter(description = "Payment ID") @PathVariable Long paymentId
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        PaymentResponse response = paymentService.getPayment(paymentId, memberId);
+        PaymentResponse response = paymentApplicationService.getPayment(paymentId, memberId);
         return ApiResponse.success(response);
     }
 
@@ -81,7 +81,7 @@ public class PaymentController {
             @Parameter(description = "Order ID") @PathVariable Long orderId
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        List<PaymentResponse> responses = paymentService.getPaymentsByOrderId(orderId, memberId);
+        List<PaymentResponse> responses = paymentApplicationService.getPaymentsByOrderId(orderId, memberId);
         return ApiResponse.success(responses);
     }
 }

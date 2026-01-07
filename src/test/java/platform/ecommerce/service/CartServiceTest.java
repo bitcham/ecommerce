@@ -20,8 +20,8 @@ import platform.ecommerce.dto.response.product.ProductOptionResponse;
 import platform.ecommerce.exception.EntityNotFoundException;
 import platform.ecommerce.exception.ErrorCode;
 import platform.ecommerce.repository.cart.CartRepository;
+import platform.ecommerce.service.application.ProductApplicationService;
 import platform.ecommerce.service.cart.CartServiceImpl;
-import platform.ecommerce.service.product.ProductService;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -42,7 +42,7 @@ class CartServiceTest {
     private CartRepository cartRepository;
 
     @Mock
-    private ProductService productService;
+    private ProductApplicationService productApplicationService;
 
     @InjectMocks
     private CartServiceImpl cartService;
@@ -138,7 +138,7 @@ class CartServiceTest {
                     .quantity(2)
                     .build();
 
-            given(productService.getProductDetail(PRODUCT_ID)).willReturn(testProduct);
+            given(productApplicationService.getProductDetail(PRODUCT_ID)).willReturn(testProduct);
             given(cartRepository.findByMemberIdWithItems(MEMBER_ID))
                     .willReturn(Optional.of(testCart));
 
@@ -170,7 +170,7 @@ class CartServiceTest {
                     .quantity(3)
                     .build();
 
-            given(productService.getProductDetail(PRODUCT_ID)).willReturn(testProduct);
+            given(productApplicationService.getProductDetail(PRODUCT_ID)).willReturn(testProduct);
             given(cartRepository.findByMemberIdWithItems(MEMBER_ID))
                     .willReturn(Optional.of(testCart));
 
@@ -192,7 +192,7 @@ class CartServiceTest {
                     .quantity(1)
                     .build();
 
-            given(productService.getProductDetail(PRODUCT_ID)).willReturn(testProduct);
+            given(productApplicationService.getProductDetail(PRODUCT_ID)).willReturn(testProduct);
 
             // when & then
             assertThatThrownBy(() -> cartService.addToCart(MEMBER_ID, request))
@@ -209,7 +209,7 @@ class CartServiceTest {
                     .quantity(1)
                     .build();
 
-            given(productService.getProductDetail(PRODUCT_ID)).willReturn(testProduct);
+            given(productApplicationService.getProductDetail(PRODUCT_ID)).willReturn(testProduct);
             given(cartRepository.findByMemberIdWithItems(MEMBER_ID))
                     .willReturn(Optional.empty());
             given(cartRepository.save(any(Cart.class))).willAnswer(invocation -> {
@@ -240,7 +240,7 @@ class CartServiceTest {
 
             given(cartRepository.findByMemberIdWithItems(MEMBER_ID))
                     .willReturn(Optional.of(testCart));
-            given(productService.getProductDetail(PRODUCT_ID)).willReturn(testProduct);
+            given(productApplicationService.getProductDetail(PRODUCT_ID)).willReturn(testProduct);
 
             // when
             CartItemResponse response = cartService.updateQuantity(MEMBER_ID, 50L, 5);
@@ -346,7 +346,7 @@ class CartServiceTest {
 
             given(cartRepository.findByMemberIdWithItems(MEMBER_ID))
                     .willReturn(Optional.of(testCart));
-            given(productService.getProductDetail(PRODUCT_ID)).willReturn(testProduct);
+            given(productApplicationService.getProductDetail(PRODUCT_ID)).willReturn(testProduct);
 
             // when
             CartResponse response = cartService.getCartSummary(MEMBER_ID);
@@ -376,7 +376,7 @@ class CartServiceTest {
 
             given(cartRepository.findByMemberIdWithItems(MEMBER_ID))
                     .willReturn(Optional.of(testCart));
-            given(productService.getProductDetail(PRODUCT_ID))
+            given(productApplicationService.getProductDetail(PRODUCT_ID))
                     .willThrow(new EntityNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
 
             // when

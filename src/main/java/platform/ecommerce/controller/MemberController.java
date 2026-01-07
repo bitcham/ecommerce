@@ -12,7 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import platform.ecommerce.dto.request.*;
 import platform.ecommerce.dto.response.*;
-import platform.ecommerce.service.MemberService;
+import platform.ecommerce.service.application.MemberApplicationService;
 
 /**
  * Member REST controller.
@@ -23,7 +23,7 @@ import platform.ecommerce.service.MemberService;
 @RequiredArgsConstructor
 public class MemberController {
 
-    private final MemberService memberService;
+    private final MemberApplicationService memberApplicationService;
 
     @Operation(summary = "Register member", description = "Register a new member")
     @PostMapping
@@ -31,7 +31,7 @@ public class MemberController {
     public ApiResponse<MemberResponse> register(
             @Valid @RequestBody MemberCreateRequest request
     ) {
-        MemberResponse response = memberService.register(request);
+        MemberResponse response = memberApplicationService.register(request);
         return ApiResponse.created(response);
     }
 
@@ -48,7 +48,7 @@ public class MemberController {
                 .excludeWithdrawn(true)
                 .build();
 
-        PageResponse<MemberResponse> response = memberService.searchMembers(condition, pageable);
+        PageResponse<MemberResponse> response = memberApplicationService.searchMembers(condition, pageable);
         return ApiResponse.success(response);
     }
 
@@ -57,7 +57,7 @@ public class MemberController {
     public ApiResponse<MemberDetailResponse> getMember(
             @Parameter(description = "Member ID") @PathVariable Long memberId
     ) {
-        MemberDetailResponse response = memberService.getMemberDetail(memberId);
+        MemberDetailResponse response = memberApplicationService.getMemberDetail(memberId);
         return ApiResponse.success(response);
     }
 
@@ -67,7 +67,7 @@ public class MemberController {
             @Parameter(description = "Member ID") @PathVariable Long memberId,
             @Valid @RequestBody MemberUpdateRequest request
     ) {
-        MemberResponse response = memberService.updateProfile(memberId, request);
+        MemberResponse response = memberApplicationService.updateProfile(memberId, request);
         return ApiResponse.success(response);
     }
 
@@ -78,7 +78,7 @@ public class MemberController {
             @Parameter(description = "Member ID") @PathVariable Long memberId,
             @Valid @RequestBody PasswordChangeRequest request
     ) {
-        memberService.changePassword(memberId, request);
+        memberApplicationService.changePassword(memberId, request);
     }
 
     @Operation(summary = "Withdraw member", description = "Withdraw member account (soft delete)")
@@ -87,7 +87,7 @@ public class MemberController {
     public void withdraw(
             @Parameter(description = "Member ID") @PathVariable Long memberId
     ) {
-        memberService.withdraw(memberId);
+        memberApplicationService.withdraw(memberId);
     }
 
     @Operation(summary = "Restore member", description = "Restore withdrawn member account")
@@ -95,7 +95,7 @@ public class MemberController {
     public ApiResponse<MemberResponse> restore(
             @Parameter(description = "Member ID") @PathVariable Long memberId
     ) {
-        MemberResponse response = memberService.restore(memberId);
+        MemberResponse response = memberApplicationService.restore(memberId);
         return ApiResponse.success(response);
     }
 
@@ -108,7 +108,7 @@ public class MemberController {
             @Parameter(description = "Member ID") @PathVariable Long memberId,
             @Valid @RequestBody AddressCreateRequest request
     ) {
-        AddressResponse response = memberService.addAddress(memberId, request);
+        AddressResponse response = memberApplicationService.addAddress(memberId, request);
         return ApiResponse.created(response);
     }
 
@@ -119,7 +119,7 @@ public class MemberController {
             @Parameter(description = "Address ID") @PathVariable Long addressId,
             @Valid @RequestBody AddressUpdateRequest request
     ) {
-        AddressResponse response = memberService.updateAddress(memberId, addressId, request);
+        AddressResponse response = memberApplicationService.updateAddress(memberId, addressId, request);
         return ApiResponse.success(response);
     }
 
@@ -130,7 +130,7 @@ public class MemberController {
             @Parameter(description = "Member ID") @PathVariable Long memberId,
             @Parameter(description = "Address ID") @PathVariable Long addressId
     ) {
-        memberService.removeAddress(memberId, addressId);
+        memberApplicationService.removeAddress(memberId, addressId);
     }
 
     @Operation(summary = "Set default address", description = "Set address as default")
@@ -139,7 +139,7 @@ public class MemberController {
             @Parameter(description = "Member ID") @PathVariable Long memberId,
             @Parameter(description = "Address ID") @PathVariable Long addressId
     ) {
-        AddressResponse response = memberService.setDefaultAddress(memberId, addressId);
+        AddressResponse response = memberApplicationService.setDefaultAddress(memberId, addressId);
         return ApiResponse.success(response);
     }
 }

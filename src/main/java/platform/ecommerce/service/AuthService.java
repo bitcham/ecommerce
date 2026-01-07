@@ -4,39 +4,42 @@ import jakarta.servlet.http.HttpServletRequest;
 import platform.ecommerce.dto.request.LoginRequest;
 import platform.ecommerce.dto.request.MemberCreateRequest;
 import platform.ecommerce.dto.request.TokenRefreshRequest;
-import platform.ecommerce.dto.response.LoginResponse;
-import platform.ecommerce.dto.response.MemberResponse;
-import platform.ecommerce.dto.response.TokenResponse;
+import platform.ecommerce.service.auth.EmailNotificationInfo;
+import platform.ecommerce.service.auth.LoginResult;
+import platform.ecommerce.service.auth.RegistrationResult;
+import platform.ecommerce.service.auth.TokenResult;
 
 /**
- * Authentication service interface.
+ * Authentication domain service interface.
+ * Returns domain objects/results for ApplicationService to convert to DTOs.
  */
 public interface AuthService {
 
     /**
-     * Register a new member and send verification email.
+     * Register a new member and create verification token.
+     * Does NOT send email - that's ApplicationService's responsibility.
      *
      * @param request registration request
-     * @return created member response
+     * @return registration result containing member and verification token
      */
-    MemberResponse register(MemberCreateRequest request);
+    RegistrationResult register(MemberCreateRequest request);
 
     /**
-     * Authenticate member and return tokens.
+     * Authenticate member and generate tokens.
      *
      * @param request login request
      * @param httpRequest HTTP request for device info
-     * @return login response with tokens
+     * @return login result containing member and tokens
      */
-    LoginResponse login(LoginRequest request, HttpServletRequest httpRequest);
+    LoginResult login(LoginRequest request, HttpServletRequest httpRequest);
 
     /**
      * Refresh access token using refresh token.
      *
      * @param request token refresh request
-     * @return new token response
+     * @return token result with new tokens
      */
-    TokenResponse refreshToken(TokenRefreshRequest request);
+    TokenResult refreshToken(TokenRefreshRequest request);
 
     /**
      * Logout member and revoke refresh token.
@@ -60,18 +63,22 @@ public interface AuthService {
     void verifyEmail(String token);
 
     /**
-     * Resend verification email.
+     * Create new email verification token.
+     * Does NOT send email - that's ApplicationService's responsibility.
      *
      * @param email member email
+     * @return email notification info for sending verification email
      */
-    void resendVerificationEmail(String email);
+    EmailNotificationInfo createVerificationToken(String email);
 
     /**
-     * Request password reset and send reset email.
+     * Create password reset token.
+     * Does NOT send email - that's ApplicationService's responsibility.
      *
      * @param email member email
+     * @return email notification info for sending password reset email
      */
-    void requestPasswordReset(String email);
+    EmailNotificationInfo createPasswordResetToken(String email);
 
     /**
      * Reset password using token.

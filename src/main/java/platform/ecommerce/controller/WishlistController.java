@@ -15,7 +15,7 @@ import platform.ecommerce.dto.response.PageResponse;
 import platform.ecommerce.dto.response.wishlist.WishlistItemResponse;
 import platform.ecommerce.dto.response.wishlist.WishlistResponse;
 import platform.ecommerce.security.SecurityUtils;
-import platform.ecommerce.service.wishlist.WishlistService;
+import platform.ecommerce.service.application.WishlistApplicationService;
 
 /**
  * Wishlist REST controller.
@@ -26,7 +26,7 @@ import platform.ecommerce.service.wishlist.WishlistService;
 @RequiredArgsConstructor
 public class WishlistController {
 
-    private final WishlistService wishlistService;
+    private final WishlistApplicationService wishlistApplicationService;
 
     @Operation(summary = "Add to wishlist", description = "Add a product to wishlist")
     @PostMapping("/{productId}")
@@ -36,7 +36,7 @@ public class WishlistController {
             @Parameter(description = "Product ID") @PathVariable Long productId
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        WishlistResponse response = wishlistService.addToWishlist(memberId, productId);
+        WishlistResponse response = wishlistApplicationService.addToWishlist(memberId, productId);
         return ApiResponse.success(response);
     }
 
@@ -48,7 +48,7 @@ public class WishlistController {
             @Parameter(description = "Product ID") @PathVariable Long productId
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        wishlistService.removeFromWishlist(memberId, productId);
+        wishlistApplicationService.removeFromWishlist(memberId, productId);
     }
 
     @Operation(summary = "Get my wishlist", description = "Get paginated wishlist for authenticated member")
@@ -58,7 +58,7 @@ public class WishlistController {
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        PageResponse<WishlistItemResponse> response = wishlistService.getMyWishlist(memberId, pageable);
+        PageResponse<WishlistItemResponse> response = wishlistApplicationService.getMyWishlist(memberId, pageable);
         return ApiResponse.success(response);
     }
 
@@ -69,7 +69,7 @@ public class WishlistController {
             @Parameter(description = "Product ID") @PathVariable Long productId
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        boolean result = wishlistService.isInWishlist(memberId, productId);
+        boolean result = wishlistApplicationService.isInWishlist(memberId, productId);
         return ApiResponse.success(result);
     }
 
@@ -78,7 +78,7 @@ public class WishlistController {
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<Long> getWishlistCount() {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        long count = wishlistService.getWishlistCount(memberId);
+        long count = wishlistApplicationService.getWishlistCount(memberId);
         return ApiResponse.success(count);
     }
 }

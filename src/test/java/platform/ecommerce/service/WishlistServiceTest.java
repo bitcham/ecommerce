@@ -21,8 +21,9 @@ import platform.ecommerce.dto.response.wishlist.WishlistItemResponse;
 import platform.ecommerce.dto.response.wishlist.WishlistResponse;
 import platform.ecommerce.exception.DuplicateResourceException;
 import platform.ecommerce.exception.EntityNotFoundException;
+import platform.ecommerce.mapper.WishlistMapper;
 import platform.ecommerce.repository.WishlistRepository;
-import platform.ecommerce.service.product.ProductService;
+import platform.ecommerce.service.application.ProductApplicationService;
 import platform.ecommerce.service.wishlist.WishlistServiceImpl;
 
 import java.math.BigDecimal;
@@ -33,6 +34,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
+import static org.mockito.Mockito.lenient;
 
 /**
  * Unit tests for WishlistService.
@@ -44,7 +46,10 @@ class WishlistServiceTest {
     private WishlistRepository wishlistRepository;
 
     @Mock
-    private ProductService productService;
+    private ProductApplicationService productApplicationService;
+
+    @Mock
+    private WishlistMapper wishlistMapper;
 
     @InjectMocks
     private WishlistServiceImpl wishlistService;
@@ -71,6 +76,17 @@ class WishlistServiceTest {
                 .mainImageUrl("http://example.com/image.jpg")
                 .createdAt(LocalDateTime.now())
                 .build();
+
+        // Setup default mapper behaviors
+        lenient().when(wishlistMapper.toResponse(any(Wishlist.class))).thenAnswer(invocation -> {
+            Wishlist w = invocation.getArgument(0);
+            return WishlistResponse.builder()
+                    .id(w.getId())
+                    .memberId(w.getMemberId())
+                    .productId(w.getProductId())
+                    .createdAt(w.getCreatedAt())
+                    .build();
+        });
     }
 
     @Nested
@@ -83,7 +99,7 @@ class WishlistServiceTest {
             // given
             given(wishlistRepository.existsByMemberIdAndProductId(MEMBER_ID, PRODUCT_ID))
                     .willReturn(false);
-            given(productService.getProduct(PRODUCT_ID)).willReturn(testProduct);
+            given(productApplicationService.getProduct(PRODUCT_ID)).willReturn(testProduct);
             given(wishlistRepository.save(any(Wishlist.class))).willAnswer(invocation -> {
                 Wishlist wishlist = invocation.getArgument(0);
                 ReflectionTestUtils.setField(wishlist, "id", WISHLIST_ID);
@@ -119,7 +135,7 @@ class WishlistServiceTest {
             // given
             given(wishlistRepository.existsByMemberIdAndProductId(MEMBER_ID, PRODUCT_ID))
                     .willReturn(false);
-            given(productService.getProduct(PRODUCT_ID))
+            given(productApplicationService.getProduct(PRODUCT_ID))
                     .willThrow(new EntityNotFoundException(platform.ecommerce.exception.ErrorCode.PRODUCT_NOT_FOUND));
 
             // when & then
@@ -172,7 +188,7 @@ class WishlistServiceTest {
 
             given(wishlistRepository.findByMemberIdOrderByCreatedAtDesc(MEMBER_ID, pageable))
                     .willReturn(wishlistPage);
-            given(productService.getProduct(PRODUCT_ID)).willReturn(testProduct);
+            given(productApplicationService.getProduct(PRODUCT_ID)).willReturn(testProduct);
 
             // when
             PageResponse<WishlistItemResponse> response = wishlistService.getMyWishlist(MEMBER_ID, pageable);
@@ -214,7 +230,7 @@ class WishlistServiceTest {
 
             given(wishlistRepository.findByMemberIdOrderByCreatedAtDesc(MEMBER_ID, pageable))
                     .willReturn(wishlistPage);
-            given(productService.getProduct(PRODUCT_ID))
+            given(productApplicationService.getProduct(PRODUCT_ID))
                     .willThrow(new EntityNotFoundException(platform.ecommerce.exception.ErrorCode.PRODUCT_NOT_FOUND));
 
             // when

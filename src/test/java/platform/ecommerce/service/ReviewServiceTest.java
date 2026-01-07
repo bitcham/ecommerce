@@ -21,6 +21,7 @@ import platform.ecommerce.dto.response.review.RatingSummaryResponse;
 import platform.ecommerce.dto.response.review.ReviewResponse;
 import platform.ecommerce.exception.EntityNotFoundException;
 import platform.ecommerce.exception.InvalidStateException;
+import platform.ecommerce.mapper.ReviewMapper;
 import platform.ecommerce.repository.review.ReviewRepository;
 import platform.ecommerce.service.review.ReviewServiceImpl;
 
@@ -30,6 +31,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
+import static org.mockito.Mockito.lenient;
 
 /**
  * Unit tests for ReviewService.
@@ -39,6 +41,9 @@ class ReviewServiceTest {
 
     @Mock
     private ReviewRepository reviewRepository;
+
+    @Mock
+    private ReviewMapper reviewMapper;
 
     @InjectMocks
     private ReviewServiceImpl reviewService;
@@ -61,6 +66,25 @@ class ReviewServiceTest {
                 .images(List.of("image.jpg"))
                 .build();
         ReflectionTestUtils.setField(testReview, "id", REVIEW_ID);
+
+        // Setup default mapper behaviors
+        lenient().when(reviewMapper.toResponse(any(Review.class))).thenAnswer(invocation -> {
+            Review r = invocation.getArgument(0);
+            return ReviewResponse.builder()
+                    .id(r.getId())
+                    .memberId(r.getMemberId())
+                    .productId(r.getProductId())
+                    .orderItemId(r.getOrderItemId())
+                    .rating(r.getRating())
+                    .title(r.getTitle())
+                    .content(r.getContent())
+                    .images(r.getImages())
+                    .helpfulCount(r.getHelpfulCount())
+                    .verified(r.isVerified())
+                    .createdAt(r.getCreatedAt())
+                    .updatedAt(r.getUpdatedAt())
+                    .build();
+        });
     }
 
     @Nested

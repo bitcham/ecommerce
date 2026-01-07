@@ -13,8 +13,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import platform.ecommerce.domain.product.*;
 import platform.ecommerce.dto.request.product.*;
-import platform.ecommerce.dto.response.PageResponse;
-import platform.ecommerce.dto.response.product.*;
 import platform.ecommerce.exception.*;
 import platform.ecommerce.repository.product.ProductRepository;
 import platform.ecommerce.service.product.ProductServiceImpl;
@@ -26,10 +24,10 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
 
 /**
  * ProductService unit tests.
+ * Tests pure business logic with Entity returns.
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ProductService Tests")
@@ -63,12 +61,12 @@ class ProductServiceTest {
             given(productRepository.save(any(Product.class))).willReturn(product);
 
             // when
-            ProductResponse result = productService.createProduct(sellerId, request);
+            Product result = productService.createProduct(sellerId, request);
 
             // then
             assertThat(result).isNotNull();
-            assertThat(result.name()).isEqualTo("Test Product");
-            assertThat(result.status()).isEqualTo(ProductStatus.DRAFT);
+            assertThat(result.getName()).isEqualTo("Test Product");
+            assertThat(result.getStatus()).isEqualTo(ProductStatus.DRAFT);
         }
     }
 
@@ -87,11 +85,11 @@ class ProductServiceTest {
             given(productRepository.findByIdNotDeleted(productId)).willReturn(Optional.of(product));
 
             // when
-            ProductResponse result = productService.getProduct(productId);
+            Product result = productService.getProduct(productId);
 
             // then
             assertThat(result).isNotNull();
-            assertThat(result.id()).isEqualTo(productId);
+            assertThat(result.getId()).isEqualTo(productId);
         }
 
         @Test
@@ -125,7 +123,7 @@ class ProductServiceTest {
             given(productRepository.searchProducts(condition, pageable)).willReturn(productPage);
 
             // when
-            PageResponse<ProductResponse> result = productService.searchProducts(condition, pageable);
+            Page<Product> result = productService.searchProducts(condition, pageable);
 
             // then
             assertThat(result).isNotNull();
@@ -153,11 +151,11 @@ class ProductServiceTest {
             given(productRepository.findByIdNotDeleted(productId)).willReturn(Optional.of(product));
 
             // when
-            ProductResponse result = productService.updateProduct(productId, request);
+            Product result = productService.updateProduct(productId, request);
 
             // then
             assertThat(result).isNotNull();
-            assertThat(product.getName()).isEqualTo("Updated Name");
+            assertThat(result.getName()).isEqualTo("Updated Name");
         }
     }
 
@@ -177,11 +175,11 @@ class ProductServiceTest {
             given(productRepository.findByIdNotDeleted(productId)).willReturn(Optional.of(product));
 
             // when
-            ProductResponse result = productService.publishProduct(productId);
+            Product result = productService.publishProduct(productId);
 
             // then
             assertThat(result).isNotNull();
-            assertThat(product.getStatus()).isEqualTo(ProductStatus.ACTIVE);
+            assertThat(result.getStatus()).isEqualTo(ProductStatus.ACTIVE);
         }
 
         @Test
@@ -222,11 +220,11 @@ class ProductServiceTest {
             given(productRepository.findByIdNotDeleted(productId)).willReturn(Optional.of(product));
 
             // when
-            ProductOptionResponse result = productService.addOption(productId, request);
+            ProductOption result = productService.addOption(productId, request);
 
             // then
             assertThat(result).isNotNull();
-            assertThat(result.optionValue()).isEqualTo("Red");
+            assertThat(result.getOptionValue()).isEqualTo("Red");
             assertThat(product.getOptions()).hasSize(1);
         }
     }
@@ -291,11 +289,11 @@ class ProductServiceTest {
             given(productRepository.findByIdNotDeleted(productId)).willReturn(Optional.of(product));
 
             // when
-            ProductImageResponse result = productService.addImage(productId, "http://example.com/image.jpg", "Alt");
+            ProductImage result = productService.addImage(productId, "http://example.com/image.jpg", "Alt");
 
             // then
             assertThat(result).isNotNull();
-            assertThat(result.imageUrl()).isEqualTo("http://example.com/image.jpg");
+            assertThat(result.getImageUrl()).isEqualTo("http://example.com/image.jpg");
             assertThat(product.getImages()).hasSize(1);
         }
     }

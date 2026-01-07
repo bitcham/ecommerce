@@ -2,72 +2,74 @@ package platform.ecommerce.service.order;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import platform.ecommerce.domain.order.Order;
 import platform.ecommerce.domain.order.PaymentMethod;
 import platform.ecommerce.dto.request.order.OrderCreateRequest;
 import platform.ecommerce.dto.request.order.OrderSearchCondition;
-import platform.ecommerce.dto.response.order.OrderResponse;
 
 /**
- * Service interface for Order operations.
+ * Domain service interface for Order operations.
+ * Returns entities for use by application layer.
  */
 public interface OrderService {
 
     /**
      * Creates a new order.
      */
-    OrderResponse createOrder(Long memberId, OrderCreateRequest request);
+    Order createOrder(Long memberId, OrderCreateRequest request);
 
     /**
      * Gets an order by ID.
-     * Verifies the member owns the order or is an admin.
      */
-    OrderResponse getOrder(Long orderId, Long memberId);
+    Order getOrder(Long orderId);
 
     /**
-     * Gets an order by order number.
-     * Verifies the member owns the order or is an admin.
+     * Gets an order by ID with ownership validation.
      */
-    OrderResponse getOrderByNumber(String orderNumber, Long memberId);
+    Order getOrder(Long orderId, Long memberId);
+
+    /**
+     * Gets an order by order number with ownership validation.
+     */
+    Order getOrderByNumber(String orderNumber, Long memberId);
 
     /**
      * Gets orders for a member.
      */
-    Page<OrderResponse> getMyOrders(Long memberId, Pageable pageable);
+    Page<Order> getMyOrders(Long memberId, Pageable pageable);
 
     /**
      * Searches orders with conditions.
      */
-    Page<OrderResponse> searchOrders(OrderSearchCondition condition, Pageable pageable);
+    Page<Order> searchOrders(OrderSearchCondition condition, Pageable pageable);
 
     /**
      * Processes payment for an order.
      */
-    OrderResponse processPayment(Long orderId, PaymentMethod paymentMethod, String transactionId);
+    Order processPayment(Long orderId, PaymentMethod paymentMethod, String transactionId);
 
     /**
      * Starts preparing an order (after payment confirmed).
      */
-    OrderResponse startPreparing(Long orderId);
+    Order startPreparing(Long orderId);
 
     /**
      * Ships an order with tracking number.
      */
-    OrderResponse shipOrder(Long orderId, String trackingNumber);
+    Order shipOrder(Long orderId, String trackingNumber);
 
     /**
      * Marks an order as delivered.
      */
-    OrderResponse deliverOrder(Long orderId);
+    Order deliverOrder(Long orderId);
 
     /**
      * Cancels an order.
-     * Verifies the member owns the order before cancellation.
      */
-    OrderResponse cancelOrder(Long orderId, Long memberId, String reason);
+    Order cancelOrder(Long orderId, Long memberId, String reason);
 
     /**
      * Cancels a specific item in an order.
-     * Verifies the member owns the order before cancellation.
      */
-    OrderResponse cancelOrderItem(Long orderId, Long memberId, Long orderItemId, String reason);
+    Order cancelOrderItem(Long orderId, Long memberId, Long orderItemId, String reason);
 }

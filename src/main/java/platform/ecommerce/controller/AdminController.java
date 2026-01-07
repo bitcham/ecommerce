@@ -15,9 +15,9 @@ import platform.ecommerce.dto.response.admin.DashboardSummaryResponse;
 import platform.ecommerce.dto.response.admin.OrderStatisticsResponse;
 import platform.ecommerce.dto.response.admin.SalesStatisticsResponse;
 import platform.ecommerce.dto.response.order.OrderResponse;
-import platform.ecommerce.service.admin.AdminDashboardService;
 import platform.ecommerce.service.admin.SalesPeriod;
-import platform.ecommerce.service.order.OrderService;
+import platform.ecommerce.service.application.AdminDashboardApplicationService;
+import platform.ecommerce.service.application.OrderApplicationService;
 
 /**
  * Admin REST controller.
@@ -29,15 +29,15 @@ import platform.ecommerce.service.order.OrderService;
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
-    private final AdminDashboardService adminDashboardService;
-    private final OrderService orderService;
+    private final AdminDashboardApplicationService adminDashboardApplicationService;
+    private final OrderApplicationService orderApplicationService;
 
     // ========== Dashboard ==========
 
     @Operation(summary = "Get dashboard summary", description = "Get today/week/month statistics")
     @GetMapping("/dashboard/summary")
     public ApiResponse<DashboardSummaryResponse> getDashboardSummary() {
-        DashboardSummaryResponse response = adminDashboardService.getDashboardSummary();
+        DashboardSummaryResponse response = adminDashboardApplicationService.getDashboardSummary();
         return ApiResponse.success(response);
     }
 
@@ -46,14 +46,14 @@ public class AdminController {
     public ApiResponse<SalesStatisticsResponse> getSalesStatistics(
             @Parameter(description = "Period type") @RequestParam(defaultValue = "DAILY") SalesPeriod period
     ) {
-        SalesStatisticsResponse response = adminDashboardService.getSalesStatistics(period);
+        SalesStatisticsResponse response = adminDashboardApplicationService.getSalesStatistics(period);
         return ApiResponse.success(response);
     }
 
     @Operation(summary = "Get order statistics", description = "Get order count by status")
     @GetMapping("/dashboard/orders")
     public ApiResponse<OrderStatisticsResponse> getOrderStatistics() {
-        OrderStatisticsResponse response = adminDashboardService.getOrderStatistics();
+        OrderStatisticsResponse response = adminDashboardApplicationService.getOrderStatistics();
         return ApiResponse.success(response);
     }
 
@@ -64,7 +64,7 @@ public class AdminController {
     public ApiResponse<Page<OrderResponse>> getAllOrders(
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<OrderResponse> response = orderService.searchOrders(null, pageable);
+        Page<OrderResponse> response = orderApplicationService.searchOrders(null, pageable);
         return ApiResponse.success(response);
     }
 }

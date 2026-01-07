@@ -18,6 +18,7 @@ import platform.ecommerce.dto.response.coupon.CouponResponse;
 import platform.ecommerce.dto.response.coupon.MemberCouponResponse;
 import platform.ecommerce.exception.EntityNotFoundException;
 import platform.ecommerce.exception.InvalidStateException;
+import platform.ecommerce.mapper.CouponMapper;
 import platform.ecommerce.repository.coupon.CouponRepository;
 import platform.ecommerce.repository.coupon.MemberCouponRepository;
 import platform.ecommerce.service.coupon.CouponServiceImpl;
@@ -30,6 +31,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
+import static org.mockito.Mockito.lenient;
 
 /**
  * Unit tests for CouponService.
@@ -42,6 +44,9 @@ class CouponServiceTest {
 
     @Mock
     private MemberCouponRepository memberCouponRepository;
+
+    @Mock
+    private CouponMapper couponMapper;
 
     @InjectMocks
     private CouponServiceImpl couponService;
@@ -72,6 +77,38 @@ class CouponServiceTest {
                 .coupon(testCoupon)
                 .build();
         ReflectionTestUtils.setField(testMemberCoupon, "id", MEMBER_COUPON_ID);
+
+        // Setup default mapper behaviors
+        lenient().when(couponMapper.toResponse(any(Coupon.class))).thenAnswer(invocation -> {
+            Coupon coupon = invocation.getArgument(0);
+            return CouponResponse.builder()
+                    .id(coupon.getId())
+                    .code(coupon.getCode())
+                    .name(coupon.getName())
+                    .type(coupon.getType())
+                    .discountValue(coupon.getDiscountValue())
+                    .minimumOrder(coupon.getMinimumOrder())
+                    .maximumDiscount(coupon.getMaximumDiscount())
+                    .validFrom(coupon.getValidFrom())
+                    .validTo(coupon.getValidTo())
+                    .totalQuantity(coupon.getTotalQuantity())
+                    .usedQuantity(coupon.getUsedQuantity())
+                    .remainingQuantity(coupon.getRemainingQuantity())
+                    .active(coupon.isActive())
+                    .build();
+        });
+
+        lenient().when(couponMapper.toMemberCouponResponse(any(MemberCoupon.class))).thenAnswer(invocation -> {
+            MemberCoupon mc = invocation.getArgument(0);
+            return MemberCouponResponse.builder()
+                    .id(mc.getId())
+                    .coupon(couponMapper.toResponse(mc.getCoupon()))
+                    .used(mc.isUsed())
+                    .usedAt(mc.getUsedAt())
+                    .available(mc.isAvailable())
+                    .expiresAt(mc.getCoupon().getValidTo())
+                    .build();
+        });
     }
 
     @Nested

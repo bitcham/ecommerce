@@ -15,7 +15,7 @@ import platform.ecommerce.dto.request.coupon.*;
 import platform.ecommerce.dto.response.*;
 import platform.ecommerce.dto.response.coupon.*;
 import platform.ecommerce.security.SecurityUtils;
-import platform.ecommerce.service.coupon.CouponService;
+import platform.ecommerce.service.application.CouponApplicationService;
 
 import java.math.BigDecimal;
 
@@ -28,7 +28,7 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class CouponController {
 
-    private final CouponService couponService;
+    private final CouponApplicationService couponApplicationService;
 
     // ========== Admin Endpoints ==========
 
@@ -39,7 +39,7 @@ public class CouponController {
     public ApiResponse<CouponResponse> createCoupon(
             @Valid @RequestBody CouponCreateRequest request
     ) {
-        CouponResponse response = couponService.createCoupon(request);
+        CouponResponse response = couponApplicationService.createCoupon(request);
         return ApiResponse.created(response);
     }
 
@@ -49,7 +49,7 @@ public class CouponController {
     public ApiResponse<CouponResponse> getCoupon(
             @Parameter(description = "Coupon ID") @PathVariable Long couponId
     ) {
-        CouponResponse response = couponService.getCoupon(couponId);
+        CouponResponse response = couponApplicationService.getCoupon(couponId);
         return ApiResponse.success(response);
     }
 
@@ -59,7 +59,7 @@ public class CouponController {
     public ApiResponse<CouponResponse> getCouponByCode(
             @Parameter(description = "Coupon code") @PathVariable String code
     ) {
-        CouponResponse response = couponService.getCouponByCode(code);
+        CouponResponse response = couponApplicationService.getCouponByCode(code);
         return ApiResponse.success(response);
     }
 
@@ -75,7 +75,7 @@ public class CouponController {
                 .activeOnly(activeOnly)
                 .codeContains(codeContains)
                 .build();
-        PageResponse<CouponResponse> response = couponService.searchCoupons(condition, pageable);
+        PageResponse<CouponResponse> response = couponApplicationService.searchCoupons(condition, pageable);
         return ApiResponse.success(response);
     }
 
@@ -86,7 +86,7 @@ public class CouponController {
             @Parameter(description = "Coupon ID") @PathVariable Long couponId,
             @Valid @RequestBody CouponUpdateRequest request
     ) {
-        CouponResponse response = couponService.updateCoupon(couponId, request);
+        CouponResponse response = couponApplicationService.updateCoupon(couponId, request);
         return ApiResponse.success(response);
     }
 
@@ -97,7 +97,7 @@ public class CouponController {
     public void deactivateCoupon(
             @Parameter(description = "Coupon ID") @PathVariable Long couponId
     ) {
-        couponService.deactivateCoupon(couponId);
+        couponApplicationService.deactivateCoupon(couponId);
     }
 
     @Operation(summary = "Delete coupon", description = "Soft delete a coupon")
@@ -107,7 +107,7 @@ public class CouponController {
     public void deleteCoupon(
             @Parameter(description = "Coupon ID") @PathVariable Long couponId
     ) {
-        couponService.deleteCoupon(couponId);
+        couponApplicationService.deleteCoupon(couponId);
     }
 
     // ========== Member Endpoints ==========
@@ -120,7 +120,7 @@ public class CouponController {
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        PageResponse<MemberCouponResponse> response = couponService.getMemberCoupons(memberId, availableOnly, pageable);
+        PageResponse<MemberCouponResponse> response = couponApplicationService.getMemberCoupons(memberId, availableOnly, pageable);
         return ApiResponse.success(response);
     }
 
@@ -132,7 +132,7 @@ public class CouponController {
             @Parameter(description = "Coupon ID") @PathVariable Long couponId
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        MemberCouponResponse response = couponService.issueCoupon(couponId, memberId);
+        MemberCouponResponse response = couponApplicationService.issueCoupon(couponId, memberId);
         return ApiResponse.created(response);
     }
 
@@ -144,7 +144,7 @@ public class CouponController {
             @Parameter(description = "Coupon code") @RequestParam String code
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        MemberCouponResponse response = couponService.issueCouponByCode(code, memberId);
+        MemberCouponResponse response = couponApplicationService.issueCouponByCode(code, memberId);
         return ApiResponse.created(response);
     }
 
@@ -156,7 +156,7 @@ public class CouponController {
             @Parameter(description = "Coupon ID") @PathVariable Long couponId,
             @Parameter(description = "Order amount") @RequestParam BigDecimal orderAmount
     ) {
-        CouponCalculationResponse response = couponService.calculateDiscount(couponId, orderAmount);
+        CouponCalculationResponse response = couponApplicationService.calculateDiscount(couponId, orderAmount);
         return ApiResponse.success(response);
     }
 
@@ -168,7 +168,7 @@ public class CouponController {
             @PageableDefault(size = 20) Pageable pageable
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        PageResponse<MemberCouponResponse> response = couponService.getAvailableCouponsForOrder(memberId, orderAmount, pageable);
+        PageResponse<MemberCouponResponse> response = couponApplicationService.getAvailableCouponsForOrder(memberId, orderAmount, pageable);
         return ApiResponse.success(response);
     }
 }

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import platform.ecommerce.dto.request.category.*;
 import platform.ecommerce.dto.response.*;
 import platform.ecommerce.dto.response.category.*;
-import platform.ecommerce.service.category.CategoryService;
+import platform.ecommerce.service.application.CategoryApplicationService;
 
 import java.util.List;
 
@@ -24,7 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CategoryController {
 
-    private final CategoryService categoryService;
+    private final CategoryApplicationService categoryApplicationService;
 
     @Operation(summary = "Create category", description = "Create a new category")
     @PostMapping
@@ -33,7 +33,7 @@ public class CategoryController {
     public ApiResponse<CategoryResponse> createCategory(
             @Valid @RequestBody CategoryCreateRequest request
     ) {
-        CategoryResponse response = categoryService.createCategory(request);
+        CategoryResponse response = categoryApplicationService.createCategory(request);
         return ApiResponse.created(response);
     }
 
@@ -42,7 +42,7 @@ public class CategoryController {
     public ApiResponse<CategoryResponse> getCategory(
             @Parameter(description = "Category ID") @PathVariable Long categoryId
     ) {
-        CategoryResponse response = categoryService.getCategory(categoryId);
+        CategoryResponse response = categoryApplicationService.getCategory(categoryId);
         return ApiResponse.success(response);
     }
 
@@ -51,21 +51,21 @@ public class CategoryController {
     public ApiResponse<CategoryTreeResponse> getCategoryTree(
             @Parameter(description = "Category ID") @PathVariable Long categoryId
     ) {
-        CategoryTreeResponse response = categoryService.getCategoryTree(categoryId);
+        CategoryTreeResponse response = categoryApplicationService.getCategoryTree(categoryId);
         return ApiResponse.success(response);
     }
 
     @Operation(summary = "Get root categories", description = "Get all root categories")
     @GetMapping("/roots")
     public ApiResponse<List<CategoryResponse>> getRootCategories() {
-        List<CategoryResponse> response = categoryService.getRootCategories();
+        List<CategoryResponse> response = categoryApplicationService.getRootCategories();
         return ApiResponse.success(response);
     }
 
     @Operation(summary = "Get full tree", description = "Get complete category tree from all roots")
     @GetMapping("/tree")
     public ApiResponse<List<CategoryTreeResponse>> getFullTree() {
-        List<CategoryTreeResponse> response = categoryService.getFullTree();
+        List<CategoryTreeResponse> response = categoryApplicationService.getFullTree();
         return ApiResponse.success(response);
     }
 
@@ -74,7 +74,7 @@ public class CategoryController {
     public ApiResponse<List<CategoryResponse>> getChildren(
             @Parameter(description = "Category ID") @PathVariable Long categoryId
     ) {
-        List<CategoryResponse> response = categoryService.getChildren(categoryId);
+        List<CategoryResponse> response = categoryApplicationService.getChildren(categoryId);
         return ApiResponse.success(response);
     }
 
@@ -83,7 +83,7 @@ public class CategoryController {
     public ApiResponse<List<CategoryResponse>> getAncestors(
             @Parameter(description = "Category ID") @PathVariable Long categoryId
     ) {
-        List<CategoryResponse> response = categoryService.getAncestors(categoryId);
+        List<CategoryResponse> response = categoryApplicationService.getAncestors(categoryId);
         return ApiResponse.success(response);
     }
 
@@ -94,7 +94,7 @@ public class CategoryController {
             @Parameter(description = "Category ID") @PathVariable Long categoryId,
             @Valid @RequestBody CategoryUpdateRequest request
     ) {
-        CategoryResponse response = categoryService.updateCategory(categoryId, request);
+        CategoryResponse response = categoryApplicationService.updateCategory(categoryId, request);
         return ApiResponse.success(response);
     }
 
@@ -105,7 +105,7 @@ public class CategoryController {
             @Parameter(description = "Category ID") @PathVariable Long categoryId,
             @Parameter(description = "New parent ID (null for root)") @RequestParam(required = false) Long newParentId
     ) {
-        CategoryResponse response = categoryService.moveCategory(categoryId, newParentId);
+        CategoryResponse response = categoryApplicationService.moveCategory(categoryId, newParentId);
         return ApiResponse.success(response);
     }
 
@@ -116,6 +116,6 @@ public class CategoryController {
     public void deleteCategory(
             @Parameter(description = "Category ID") @PathVariable Long categoryId
     ) {
-        categoryService.deleteCategory(categoryId);
+        categoryApplicationService.deleteCategory(categoryId);
     }
 }

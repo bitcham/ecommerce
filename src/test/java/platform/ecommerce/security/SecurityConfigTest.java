@@ -13,8 +13,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import platform.ecommerce.dto.response.category.CategoryResponse;
 import platform.ecommerce.dto.response.product.ProductResponse;
-import platform.ecommerce.service.category.CategoryService;
-import platform.ecommerce.service.product.ProductService;
+import platform.ecommerce.service.application.CategoryApplicationService;
+import platform.ecommerce.service.application.ProductApplicationService;
 
 import java.util.Collections;
 
@@ -38,10 +38,10 @@ class SecurityConfigTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private ProductService productService;
+    private ProductApplicationService productApplicationService;
 
     @MockitoBean
-    private CategoryService categoryService;
+    private CategoryApplicationService categoryApplicationService;
 
     @Nested
     @DisplayName("Public Endpoints")
@@ -50,7 +50,7 @@ class SecurityConfigTest {
         @Test
         @DisplayName("GET /api/v1/products/{id} should be accessible without authentication")
         void getProductPublic() throws Exception {
-            given(productService.getProduct(1L))
+            given(productApplicationService.getProduct(1L))
                     .willReturn(ProductResponse.builder().id(1L).name("Test").build());
 
             mockMvc.perform(get("/api/v1/products/1"))
@@ -60,7 +60,7 @@ class SecurityConfigTest {
         @Test
         @DisplayName("GET /api/v1/categories/roots should be accessible without authentication")
         void getCategoriesPublic() throws Exception {
-            given(categoryService.getRootCategories())
+            given(categoryApplicationService.getRootCategories())
                     .willReturn(Collections.emptyList());
 
             mockMvc.perform(get("/api/v1/categories/roots"))
@@ -87,7 +87,7 @@ class SecurityConfigTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("POST /api/v1/categories should be allowed for ADMIN role")
         void createCategoryAllowedForAdmin() throws Exception {
-            given(categoryService.createCategory(any()))
+            given(categoryApplicationService.createCategory(any()))
                     .willReturn(CategoryResponse.builder().id(1L).name("Test").build());
 
             mockMvc.perform(post("/api/v1/categories")
@@ -124,7 +124,7 @@ class SecurityConfigTest {
         @WithMockUser(roles = "SELLER")
         @DisplayName("POST /api/v1/products should be allowed for SELLER role")
         void createProductAllowedForSeller() throws Exception {
-            given(productService.createProduct(any(), any()))
+            given(productApplicationService.createProduct(any(), any()))
                     .willReturn(ProductResponse.builder().id(1L).name("Test").build());
 
             mockMvc.perform(post("/api/v1/products")
@@ -151,7 +151,7 @@ class SecurityConfigTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("POST /api/v1/products should be allowed for ADMIN role")
         void createProductAllowedForAdmin() throws Exception {
-            given(productService.createProduct(any(), any()))
+            given(productApplicationService.createProduct(any(), any()))
                     .willReturn(ProductResponse.builder().id(1L).name("Test").build());
 
             mockMvc.perform(post("/api/v1/products")
@@ -166,7 +166,7 @@ class SecurityConfigTest {
         @WithMockUser(roles = "SELLER")
         @DisplayName("PATCH /api/v1/products/{id} should be allowed for SELLER role")
         void updateProductAllowedForSeller() throws Exception {
-            given(productService.updateProduct(any(), any()))
+            given(productApplicationService.updateProduct(any(), any()))
                     .willReturn(ProductResponse.builder().id(1L).name("Updated").build());
 
             mockMvc.perform(patch("/api/v1/products/1")

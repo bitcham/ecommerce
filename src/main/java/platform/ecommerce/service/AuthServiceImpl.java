@@ -14,22 +14,22 @@ import platform.ecommerce.domain.member.MemberStatus;
 import platform.ecommerce.dto.request.LoginRequest;
 import platform.ecommerce.dto.request.MemberCreateRequest;
 import platform.ecommerce.dto.request.TokenRefreshRequest;
-import platform.ecommerce.dto.response.LoginResponse;
-import platform.ecommerce.dto.response.MemberResponse;
-import platform.ecommerce.dto.response.TokenResponse;
 import platform.ecommerce.exception.*;
-import platform.ecommerce.mapper.MemberMapper;
 import platform.ecommerce.repository.EmailVerificationTokenRepository;
 import platform.ecommerce.repository.MemberRepository;
 import platform.ecommerce.repository.PasswordResetTokenRepository;
 import platform.ecommerce.repository.RefreshTokenRepository;
 import platform.ecommerce.security.JwtTokenProvider;
-import platform.ecommerce.service.email.EmailService;
+import platform.ecommerce.service.auth.EmailNotificationInfo;
+import platform.ecommerce.service.auth.LoginResult;
+import platform.ecommerce.service.auth.RegistrationResult;
+import platform.ecommerce.service.auth.TokenResult;
 
 import java.time.LocalDateTime;
 
 /**
- * Authentication service implementation.
+ * Authentication domain service implementation.
+ * Pure business logic - no DTO conversion, no side effects like email sending.
  */
 @Slf4j
 @Service
@@ -43,12 +43,10 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
-    private final MemberMapper memberMapper;
-    private final EmailService emailService;
 
     @Override
     @Transactional
-    public MemberResponse register(MemberCreateRequest request) {
+    public RegistrationResult register(MemberCreateRequest request) {
         log.info("Registering new member with email: {}", request.email());
 
         validatePasswordMatch(request);
@@ -69,20 +67,14 @@ public class AuthServiceImpl implements AuthService {
                 .build();
         emailVerificationTokenRepository.save(verificationToken);
 
-        // Send verification email asynchronously
-        emailService.sendVerificationEmail(
-                savedMember.getEmail(),
-                savedMember.getName(),
-                verificationToken.getToken()
-        );
-        log.info("Member registered successfully: id={}, verification email sent", savedMember.getId());
+        log.info("Member registered successfully: id={}", savedMember.getId());
 
-        return memberMapper.toResponse(savedMember);
+        return RegistrationResult.of(savedMember, verificationToken.getToken());
     }
 
     @Override
     @Transactional
-    public LoginResponse login(LoginRequest request, HttpServletRequest httpRequest) {
+    public LoginResult login(LoginRequest request, HttpServletRequest httpRequest) {
         log.info("Login attempt for email: {}", request.email());
 
         Member member = memberRepository.findByEmail(request.email())
@@ -100,18 +92,17 @@ public class AuthServiceImpl implements AuthService {
 
         log.info("Login successful for member: id={}", member.getId());
 
-        TokenResponse tokenResponse = TokenResponse.of(
+        return LoginResult.of(
+                member,
                 accessToken,
                 refreshToken.getToken(),
                 jwtTokenProvider.getAccessTokenExpirationSeconds()
         );
-
-        return LoginResponse.of(tokenResponse, memberMapper.toResponse(member));
     }
 
     @Override
     @Transactional
-    public TokenResponse refreshToken(TokenRefreshRequest request) {
+    public TokenResult refreshToken(TokenRefreshRequest request) {
         log.info("Token refresh request");
 
         RefreshToken refreshToken = refreshTokenRepository
@@ -129,7 +120,11 @@ public class AuthServiceImpl implements AuthService {
 
         log.info("Token refreshed for member: id={}", member.getId());
 
-        return TokenResponse.of(accessToken, newRefreshTokenValue, jwtTokenProvider.getAccessTokenExpirationSeconds());
+        return TokenResult.of(
+                accessToken,
+                newRefreshTokenValue,
+                jwtTokenProvider.getAccessTokenExpirationSeconds()
+        );
     }
 
     @Override
@@ -167,8 +162,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public void resendVerificationEmail(String email) {
-        log.info("Resend verification email for: {}", email);
+    public EmailNotificationInfo createVerificationToken(String email) {
+        log.info("Creating verification token for: {}", email);
 
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
@@ -183,18 +178,18 @@ public class AuthServiceImpl implements AuthService {
                 .build();
         emailVerificationTokenRepository.save(verificationToken);
 
-        // Send verification email asynchronously
-        emailService.sendVerificationEmail(
+        log.info("Verification token created for member: id={}", member.getId());
+
+        return EmailNotificationInfo.of(
                 member.getEmail(),
                 member.getName(),
                 verificationToken.getToken()
         );
-        log.info("Verification email resent for member: id={}", member.getId());
     }
 
     @Override
     @Transactional
-    public void requestPasswordReset(String email) {
+    public EmailNotificationInfo createPasswordResetToken(String email) {
         log.info("Password reset requested for email: {}", email);
 
         Member member = memberRepository.findByEmail(email)
@@ -206,13 +201,13 @@ public class AuthServiceImpl implements AuthService {
                 .build();
         passwordResetTokenRepository.save(resetToken);
 
-        // Send password reset email asynchronously
-        emailService.sendPasswordResetEmail(
+        log.info("Password reset token created for member: id={}", member.getId());
+
+        return EmailNotificationInfo.of(
                 member.getEmail(),
                 member.getName(),
                 resetToken.getToken()
         );
-        log.info("Password reset email sent for member: id={}", member.getId());
     }
 
     @Override

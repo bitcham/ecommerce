@@ -6,16 +6,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import platform.ecommerce.dto.request.product.*;
 import platform.ecommerce.dto.response.*;
 import platform.ecommerce.dto.response.product.*;
-import platform.ecommerce.service.product.ProductService;
+import platform.ecommerce.service.application.ProductApplicationService;
 
 import java.math.BigDecimal;
 
@@ -28,7 +26,7 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class ProductController {
 
-    private final ProductService productService;
+    private final ProductApplicationService productApplicationService;
 
     @Operation(summary = "Create product", description = "Create a new product (seller only)")
     @PostMapping
@@ -38,7 +36,7 @@ public class ProductController {
             @Parameter(description = "Seller ID") @RequestParam Long sellerId,
             @Valid @RequestBody ProductCreateRequest request
     ) {
-        ProductResponse response = productService.createProduct(sellerId, request);
+        ProductResponse response = productApplicationService.createProduct(sellerId, request);
         return ApiResponse.created(response);
     }
 
@@ -47,7 +45,7 @@ public class ProductController {
     public ApiResponse<ProductResponse> getProduct(
             @Parameter(description = "Product ID") @PathVariable Long productId
     ) {
-        ProductResponse response = productService.getProduct(productId);
+        ProductResponse response = productApplicationService.getProduct(productId);
         return ApiResponse.success(response);
     }
 
@@ -56,7 +54,7 @@ public class ProductController {
     public ApiResponse<ProductDetailResponse> getProductDetail(
             @Parameter(description = "Product ID") @PathVariable Long productId
     ) {
-        ProductDetailResponse response = productService.getProductDetail(productId);
+        ProductDetailResponse response = productApplicationService.getProductDetail(productId);
         return ApiResponse.success(response);
     }
 
@@ -80,7 +78,7 @@ public class ProductController {
                 .sortType(sort)
                 .build();
 
-        PageResponse<ProductResponse> response = productService.searchProducts(condition, pageable);
+        PageResponse<ProductResponse> response = productApplicationService.searchProducts(condition, pageable);
         return ApiResponse.success(response);
     }
 
@@ -91,7 +89,7 @@ public class ProductController {
             @Parameter(description = "Product ID") @PathVariable Long productId,
             @Valid @RequestBody ProductUpdateRequest request
     ) {
-        ProductResponse response = productService.updateProduct(productId, request);
+        ProductResponse response = productApplicationService.updateProduct(productId, request);
         return ApiResponse.success(response);
     }
 
@@ -101,7 +99,7 @@ public class ProductController {
     public ApiResponse<ProductResponse> publishProduct(
             @Parameter(description = "Product ID") @PathVariable Long productId
     ) {
-        ProductResponse response = productService.publishProduct(productId);
+        ProductResponse response = productApplicationService.publishProduct(productId);
         return ApiResponse.success(response);
     }
 
@@ -112,7 +110,7 @@ public class ProductController {
     public void discontinueProduct(
             @Parameter(description = "Product ID") @PathVariable Long productId
     ) {
-        productService.discontinueProduct(productId);
+        productApplicationService.discontinueProduct(productId);
     }
 
     @Operation(summary = "Delete product", description = "Soft delete product")
@@ -122,7 +120,7 @@ public class ProductController {
     public void deleteProduct(
             @Parameter(description = "Product ID") @PathVariable Long productId
     ) {
-        productService.deleteProduct(productId);
+        productApplicationService.deleteProduct(productId);
     }
 
     // ========== Option Endpoints ==========
@@ -135,7 +133,7 @@ public class ProductController {
             @Parameter(description = "Product ID") @PathVariable Long productId,
             @Valid @RequestBody ProductOptionRequest request
     ) {
-        ProductOptionResponse response = productService.addOption(productId, request);
+        ProductOptionResponse response = productApplicationService.addOption(productId, request);
         return ApiResponse.created(response);
     }
 
@@ -147,7 +145,7 @@ public class ProductController {
             @Parameter(description = "Product ID") @PathVariable Long productId,
             @Parameter(description = "Option ID") @PathVariable Long optionId
     ) {
-        productService.removeOption(productId, optionId);
+        productApplicationService.removeOption(productId, optionId);
     }
 
     @Operation(summary = "Update option stock", description = "Update product option stock")
@@ -158,7 +156,7 @@ public class ProductController {
             @Parameter(description = "Option ID") @PathVariable Long optionId,
             @Parameter(description = "New stock quantity") @RequestParam int stock
     ) {
-        ProductOptionResponse response = productService.updateOptionStock(productId, optionId, stock);
+        ProductOptionResponse response = productApplicationService.updateOptionStock(productId, optionId, stock);
         return ApiResponse.success(response);
     }
 
@@ -173,7 +171,7 @@ public class ProductController {
             @Parameter(description = "Image URL") @RequestParam String imageUrl,
             @Parameter(description = "Alt text") @RequestParam(required = false) String altText
     ) {
-        ProductImageResponse response = productService.addImage(productId, imageUrl, altText);
+        ProductImageResponse response = productApplicationService.addImage(productId, imageUrl, altText);
         return ApiResponse.created(response);
     }
 
@@ -185,6 +183,6 @@ public class ProductController {
             @Parameter(description = "Product ID") @PathVariable Long productId,
             @Parameter(description = "Image ID") @PathVariable Long imageId
     ) {
-        productService.removeImage(productId, imageId);
+        productApplicationService.removeImage(productId, imageId);
     }
 }

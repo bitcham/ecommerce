@@ -15,7 +15,7 @@ import platform.ecommerce.dto.request.review.*;
 import platform.ecommerce.dto.response.*;
 import platform.ecommerce.dto.response.review.*;
 import platform.ecommerce.security.SecurityUtils;
-import platform.ecommerce.service.review.ReviewService;
+import platform.ecommerce.service.application.ReviewApplicationService;
 
 /**
  * Review REST controller.
@@ -26,7 +26,7 @@ import platform.ecommerce.service.review.ReviewService;
 @RequiredArgsConstructor
 public class ReviewController {
 
-    private final ReviewService reviewService;
+    private final ReviewApplicationService reviewApplicationService;
 
     @Operation(summary = "Create review", description = "Create a new product review")
     @PostMapping("/products/{productId}/reviews")
@@ -37,7 +37,7 @@ public class ReviewController {
             @Valid @RequestBody ReviewCreateRequest request
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        ReviewResponse response = reviewService.createReview(memberId, productId, request);
+        ReviewResponse response = reviewApplicationService.createReview(memberId, productId, request);
         return ApiResponse.created(response);
     }
 
@@ -46,7 +46,7 @@ public class ReviewController {
     public ApiResponse<ReviewResponse> getReview(
             @Parameter(description = "Review ID") @PathVariable Long reviewId
     ) {
-        ReviewResponse response = reviewService.getReview(reviewId);
+        ReviewResponse response = reviewApplicationService.getReview(reviewId);
         return ApiResponse.success(response);
     }
 
@@ -56,7 +56,7 @@ public class ReviewController {
             @Parameter(description = "Product ID") @PathVariable Long productId,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        PageResponse<ReviewResponse> response = reviewService.getProductReviews(productId, pageable);
+        PageResponse<ReviewResponse> response = reviewApplicationService.getProductReviews(productId, pageable);
         return ApiResponse.success(response);
     }
 
@@ -67,7 +67,7 @@ public class ReviewController {
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        PageResponse<ReviewResponse> response = reviewService.getMemberReviews(memberId, pageable);
+        PageResponse<ReviewResponse> response = reviewApplicationService.getMemberReviews(memberId, pageable);
         return ApiResponse.success(response);
     }
 
@@ -76,7 +76,7 @@ public class ReviewController {
     public ApiResponse<ReviewStatisticsResponse> getProductStatistics(
             @Parameter(description = "Product ID") @PathVariable Long productId
     ) {
-        ReviewStatisticsResponse response = reviewService.getProductStatistics(productId);
+        ReviewStatisticsResponse response = reviewApplicationService.getProductStatistics(productId);
         return ApiResponse.success(response);
     }
 
@@ -88,7 +88,7 @@ public class ReviewController {
             @Valid @RequestBody ReviewUpdateRequest request
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        ReviewResponse response = reviewService.updateReview(reviewId, memberId, request);
+        ReviewResponse response = reviewApplicationService.updateReview(reviewId, memberId, request);
         return ApiResponse.success(response);
     }
 
@@ -100,7 +100,7 @@ public class ReviewController {
             @Parameter(description = "Review ID") @PathVariable Long reviewId
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        reviewService.deleteReview(reviewId, memberId);
+        reviewApplicationService.deleteReview(reviewId, memberId);
     }
 
     // ========== Image Endpoints ==========
@@ -114,7 +114,7 @@ public class ReviewController {
             @Parameter(description = "Image URL") @RequestParam String imageUrl
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        ReviewImageResponse response = reviewService.addImage(reviewId, memberId, imageUrl);
+        ReviewImageResponse response = reviewApplicationService.addImage(reviewId, memberId, imageUrl);
         return ApiResponse.created(response);
     }
 
@@ -127,6 +127,6 @@ public class ReviewController {
             @Parameter(description = "Image ID") @PathVariable Long imageId
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        reviewService.removeImage(reviewId, imageId, memberId);
+        reviewApplicationService.removeImage(reviewId, imageId, memberId);
     }
 }

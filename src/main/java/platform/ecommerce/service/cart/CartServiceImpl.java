@@ -14,7 +14,7 @@ import platform.ecommerce.dto.response.product.ProductOptionResponse;
 import platform.ecommerce.exception.EntityNotFoundException;
 import platform.ecommerce.exception.ErrorCode;
 import platform.ecommerce.repository.cart.CartRepository;
-import platform.ecommerce.service.product.ProductService;
+import platform.ecommerce.service.application.ProductApplicationService;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -29,7 +29,7 @@ import java.util.List;
 public class CartServiceImpl implements CartService {
 
     private final CartRepository cartRepository;
-    private final ProductService productService;
+    private final ProductApplicationService productApplicationService;
 
     @Override
     @Transactional
@@ -45,7 +45,7 @@ public class CartServiceImpl implements CartService {
         log.info("Adding item to cart for member: {}", memberId);
 
         // Validate product exists and is available
-        ProductDetailResponse product = productService.getProductDetail(request.productId());
+        ProductDetailResponse product = productApplicationService.getProductDetail(request.productId());
         validateProductAvailable(product, request.productOptionId());
 
         Cart cart = getOrCreateCartEntity(memberId);
@@ -65,7 +65,7 @@ public class CartServiceImpl implements CartService {
         cart.updateItemQuantity(cartItemId, quantity);
 
         CartItem item = cart.findItemById(cartItemId);
-        ProductDetailResponse product = productService.getProductDetail(item.getProductId());
+        ProductDetailResponse product = productApplicationService.getProductDetail(item.getProductId());
 
         return toItemResponse(item, product);
     }
@@ -173,7 +173,7 @@ public class CartServiceImpl implements CartService {
 
     private CartItemResponse toItemResponseWithProduct(CartItem item) {
         try {
-            ProductDetailResponse product = productService.getProductDetail(item.getProductId());
+            ProductDetailResponse product = productApplicationService.getProductDetail(item.getProductId());
             return toItemResponse(item, product);
         } catch (EntityNotFoundException e) {
             // Product no longer available

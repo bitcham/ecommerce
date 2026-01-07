@@ -1,44 +1,47 @@
 package platform.ecommerce.service.product;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import platform.ecommerce.domain.product.Product;
+import platform.ecommerce.domain.product.ProductImage;
+import platform.ecommerce.domain.product.ProductOption;
 import platform.ecommerce.dto.request.product.*;
-import platform.ecommerce.dto.response.*;
-import platform.ecommerce.dto.response.product.*;
 
 /**
- * Product service interface.
+ * Product domain service interface.
+ * Returns entities for ApplicationService to convert to DTOs.
  */
 public interface ProductService {
 
     /**
      * Create a new product.
+     * @return created Product entity
      */
-    ProductResponse createProduct(Long sellerId, ProductCreateRequest request);
+    Product createProduct(Long sellerId, ProductCreateRequest request);
 
     /**
      * Get product by ID.
+     * @return Product entity
      */
-    ProductResponse getProduct(Long productId);
-
-    /**
-     * Get product detail with options and images.
-     */
-    ProductDetailResponse getProductDetail(Long productId);
+    Product getProduct(Long productId);
 
     /**
      * Search products with conditions.
+     * @return page of Product entities
      */
-    PageResponse<ProductResponse> searchProducts(ProductSearchCondition condition, Pageable pageable);
+    Page<Product> searchProducts(ProductSearchCondition condition, Pageable pageable);
 
     /**
      * Update product details.
+     * @return updated Product entity
      */
-    ProductResponse updateProduct(Long productId, ProductUpdateRequest request);
+    Product updateProduct(Long productId, ProductUpdateRequest request);
 
     /**
      * Publish product (DRAFT -> ACTIVE).
+     * @return updated Product entity
      */
-    ProductResponse publishProduct(Long productId);
+    Product publishProduct(Long productId);
 
     /**
      * Discontinue product.
@@ -52,8 +55,9 @@ public interface ProductService {
 
     /**
      * Add option to product.
+     * @return created ProductOption entity
      */
-    ProductOptionResponse addOption(Long productId, ProductOptionRequest request);
+    ProductOption addOption(Long productId, ProductOptionRequest request);
 
     /**
      * Remove option from product.
@@ -62,13 +66,15 @@ public interface ProductService {
 
     /**
      * Update option stock.
+     * @return updated ProductOption entity
      */
-    ProductOptionResponse updateOptionStock(Long productId, Long optionId, int stock);
+    ProductOption updateOptionStock(Long productId, Long optionId, int stock);
 
     /**
      * Add image to product.
+     * @return created ProductImage entity
      */
-    ProductImageResponse addImage(Long productId, String imageUrl, String altText);
+    ProductImage addImage(Long productId, String imageUrl, String altText);
 
     /**
      * Remove image from product.

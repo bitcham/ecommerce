@@ -19,6 +19,7 @@ import platform.ecommerce.dto.response.coupon.MemberCouponResponse;
 import platform.ecommerce.exception.EntityNotFoundException;
 import platform.ecommerce.exception.ErrorCode;
 import platform.ecommerce.exception.InvalidStateException;
+import platform.ecommerce.mapper.CouponMapper;
 import platform.ecommerce.repository.coupon.CouponRepository;
 import platform.ecommerce.repository.coupon.MemberCouponRepository;
 
@@ -36,6 +37,7 @@ public class CouponServiceImpl implements CouponService {
 
     private final CouponRepository couponRepository;
     private final MemberCouponRepository memberCouponRepository;
+    private final CouponMapper couponMapper;
 
     @Override
     @Transactional
@@ -59,25 +61,25 @@ public class CouponServiceImpl implements CouponService {
         Coupon savedCoupon = couponRepository.save(coupon);
         log.info("Coupon created: id={}", savedCoupon.getId());
 
-        return toResponse(savedCoupon);
+        return couponMapper.toResponse(savedCoupon);
     }
 
     @Override
     public CouponResponse getCoupon(Long couponId) {
         Coupon coupon = findCouponById(couponId);
-        return toResponse(coupon);
+        return couponMapper.toResponse(coupon);
     }
 
     @Override
     public CouponResponse getCouponByCode(String code) {
         Coupon coupon = findCouponByCode(code);
-        return toResponse(coupon);
+        return couponMapper.toResponse(coupon);
     }
 
     @Override
     public PageResponse<CouponResponse> searchCoupons(CouponSearchCondition condition, Pageable pageable) {
         Page<Coupon> page = couponRepository.searchCoupons(condition, pageable);
-        return PageResponse.of(page.map(this::toResponse));
+        return PageResponse.of(page.map(couponMapper::toResponse));
     }
 
     @Override
@@ -104,7 +106,7 @@ public class CouponServiceImpl implements CouponService {
         }
 
         log.info("Coupon updated: id={}", couponId);
-        return toResponse(coupon);
+        return couponMapper.toResponse(coupon);
     }
 
     @Override
@@ -161,13 +163,13 @@ public class CouponServiceImpl implements CouponService {
         MemberCoupon saved = memberCouponRepository.save(memberCoupon);
         log.info("Coupon issued: memberCouponId={}", saved.getId());
 
-        return toMemberCouponResponse(saved);
+        return couponMapper.toMemberCouponResponse(saved);
     }
 
     @Override
     public List<MemberCouponResponse> getMemberCoupons(Long memberId) {
         return memberCouponRepository.findAllByMemberId(memberId).stream()
-                .map(this::toMemberCouponResponse)
+                .map(couponMapper::toMemberCouponResponse)
                 .toList();
     }
 
@@ -175,7 +177,7 @@ public class CouponServiceImpl implements CouponService {
     public List<MemberCouponResponse> getAvailableMemberCoupons(Long memberId) {
         return memberCouponRepository.findAvailableByMemberId(memberId).stream()
                 .filter(MemberCoupon::isAvailable)
-                .map(this::toMemberCouponResponse)
+                .map(couponMapper::toMemberCouponResponse)
                 .toList();
     }
 
@@ -187,7 +189,7 @@ public class CouponServiceImpl implements CouponService {
         } else {
             page = memberCouponRepository.findAllByMemberId(memberId, pageable);
         }
-        return PageResponse.of(page.map(this::toMemberCouponResponse));
+        return PageResponse.of(page.map(couponMapper::toMemberCouponResponse));
     }
 
     @Override
@@ -210,16 +212,11 @@ public class CouponServiceImpl implements CouponService {
     @Override
     public PageResponse<MemberCouponResponse> getAvailableCouponsForOrder(Long memberId, BigDecimal orderAmount, Pageable pageable) {
         Page<MemberCoupon> page = memberCouponRepository.findAvailableByMemberId(memberId, pageable);
-        Page<MemberCouponResponse> filtered = page.map(mc -> {
-            if (mc.getCoupon().isApplicable(orderAmount)) {
-                return toMemberCouponResponse(mc);
-            }
-            return null;
-        });
 
-        // Filter nulls - return only applicable coupons
-        List<MemberCouponResponse> applicable = filtered.getContent().stream()
-                .filter(r -> r != null)
+        // Filter only applicable coupons
+        List<MemberCouponResponse> applicable = page.getContent().stream()
+                .filter(mc -> mc.getCoupon().isApplicable(orderAmount))
+                .map(couponMapper::toMemberCouponResponse)
                 .toList();
 
         return PageResponse.of(applicable, (int) page.getTotalElements(), pageable.getPageNumber(), pageable.getPageSize());
@@ -298,34 +295,5 @@ public class CouponServiceImpl implements CouponService {
         if (couponRepository.existsByCode(code.toUpperCase())) {
             throw new InvalidStateException(ErrorCode.CONFLICT, "Coupon code already exists");
         }
-    }
-
-    private CouponResponse toResponse(Coupon coupon) {
-        return CouponResponse.builder()
-                .id(coupon.getId())
-                .code(coupon.getCode())
-                .name(coupon.getName())
-                .type(coupon.getType())
-                .discountValue(coupon.getDiscountValue())
-                .minimumOrder(coupon.getMinimumOrder())
-                .maximumDiscount(coupon.getMaximumDiscount())
-                .validFrom(coupon.getValidFrom())
-                .validTo(coupon.getValidTo())
-                .totalQuantity(coupon.getTotalQuantity())
-                .usedQuantity(coupon.getUsedQuantity())
-                .remainingQuantity(coupon.getRemainingQuantity())
-                .active(coupon.isActive())
-                .build();
-    }
-
-    private MemberCouponResponse toMemberCouponResponse(MemberCoupon memberCoupon) {
-        return MemberCouponResponse.builder()
-                .id(memberCoupon.getId())
-                .coupon(toResponse(memberCoupon.getCoupon()))
-                .used(memberCoupon.isUsed())
-                .usedAt(memberCoupon.getUsedAt())
-                .available(memberCoupon.isAvailable())
-                .expiresAt(memberCoupon.getCoupon().getValidTo())
-                .build();
     }
 }

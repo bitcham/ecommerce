@@ -10,16 +10,15 @@ import org.springframework.transaction.annotation.Transactional;
 import platform.ecommerce.domain.member.Member;
 import platform.ecommerce.domain.member.MemberAddress;
 import platform.ecommerce.dto.request.*;
-import platform.ecommerce.dto.response.*;
 import platform.ecommerce.exception.DuplicateResourceException;
 import platform.ecommerce.exception.EntityNotFoundException;
 import platform.ecommerce.exception.ErrorCode;
 import platform.ecommerce.exception.InvalidStateException;
-import platform.ecommerce.mapper.MemberMapper;
 import platform.ecommerce.repository.MemberRepository;
 
 /**
- * Member service implementation.
+ * Member domain service implementation.
+ * Pure business logic - returns entities.
  */
 @Slf4j
 @Service
@@ -28,12 +27,11 @@ import platform.ecommerce.repository.MemberRepository;
 public class MemberServiceImpl implements MemberService {
 
     private final MemberRepository memberRepository;
-    private final MemberMapper memberMapper;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
-    public MemberResponse register(MemberCreateRequest request) {
+    public Member register(MemberCreateRequest request) {
         log.info("Registering new member with email: {}", request.email());
 
         validatePasswordMatch(request);
@@ -49,37 +47,28 @@ public class MemberServiceImpl implements MemberService {
         Member savedMember = memberRepository.save(member);
         log.info("Member registered successfully: id={}", savedMember.getId());
 
-        return memberMapper.toResponse(savedMember);
+        return savedMember;
     }
 
     @Override
-    public MemberResponse getMember(Long memberId) {
-        Member member = findMemberById(memberId);
-        return memberMapper.toResponse(member);
+    public Member getMember(Long memberId) {
+        return findMemberById(memberId);
     }
 
     @Override
-    public MemberDetailResponse getMemberDetail(Long memberId) {
-        Member member = findMemberById(memberId);
-        return memberMapper.toDetailResponse(member);
-    }
-
-    @Override
-    public PageResponse<MemberResponse> searchMembers(MemberSearchCondition condition, Pageable pageable) {
-        Page<Member> memberPage = memberRepository.searchMembers(condition, pageable);
-        Page<MemberResponse> responsePage = memberPage.map(memberMapper::toResponse);
-        return PageResponse.of(responsePage);
+    public Page<Member> searchMembers(MemberSearchCondition condition, Pageable pageable) {
+        return memberRepository.searchMembers(condition, pageable);
     }
 
     @Override
     @Transactional
-    public MemberResponse updateProfile(Long memberId, MemberUpdateRequest request) {
+    public Member updateProfile(Long memberId, MemberUpdateRequest request) {
         log.info("Updating profile for member: id={}", memberId);
 
         Member member = findMemberById(memberId);
         member.updateProfile(request.name(), request.phone(), request.profileImage());
 
-        return memberMapper.toResponse(member);
+        return member;
     }
 
     @Override
@@ -109,19 +98,19 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     @Transactional
-    public MemberResponse restore(Long memberId) {
+    public Member restore(Long memberId) {
         log.info("Restoring member: id={}", memberId);
 
         Member member = findMemberById(memberId);
         member.restore();
 
         log.info("Member restored successfully: id={}", memberId);
-        return memberMapper.toResponse(member);
+        return member;
     }
 
     @Override
     @Transactional
-    public AddressResponse addAddress(Long memberId, AddressCreateRequest request) {
+    public MemberAddress addAddress(Long memberId, AddressCreateRequest request) {
         log.info("Adding address for member: id={}", memberId);
 
         Member member = findMemberById(memberId);
@@ -136,12 +125,12 @@ public class MemberServiceImpl implements MemberService {
         );
 
         log.info("Address added successfully for member: id={}, addressId={}", memberId, address.getId());
-        return memberMapper.toAddressResponse(address);
+        return address;
     }
 
     @Override
     @Transactional
-    public AddressResponse updateAddress(Long memberId, Long addressId, AddressUpdateRequest request) {
+    public MemberAddress updateAddress(Long memberId, Long addressId, AddressUpdateRequest request) {
         log.info("Updating address for member: id={}, addressId={}", memberId, addressId);
 
         Member member = findMemberById(memberId);
@@ -156,7 +145,7 @@ public class MemberServiceImpl implements MemberService {
                 request.addressDetail()
         );
 
-        return memberMapper.toAddressResponse(address);
+        return address;
     }
 
     @Override
@@ -172,13 +161,11 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     @Transactional
-    public AddressResponse setDefaultAddress(Long memberId, Long addressId) {
+    public MemberAddress setDefaultAddress(Long memberId, Long addressId) {
         log.info("Setting default address for member: id={}, addressId={}", memberId, addressId);
 
         Member member = findMemberById(memberId);
-        MemberAddress address = member.setDefaultAddress(addressId);
-
-        return memberMapper.toAddressResponse(address);
+        return member.setDefaultAddress(addressId);
     }
 
     // ========== Private Helper Methods ==========

@@ -16,13 +16,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 import platform.ecommerce.domain.order.*;
 import platform.ecommerce.dto.request.order.*;
-import platform.ecommerce.dto.response.order.OrderResponse;
 import platform.ecommerce.exception.EntityNotFoundException;
 import platform.ecommerce.exception.InvalidStateException;
-import platform.ecommerce.repository.MemberRepository;
 import platform.ecommerce.repository.order.OrderRepository;
-import platform.ecommerce.service.email.EmailService;
-import platform.ecommerce.service.notification.NotificationService;
 import platform.ecommerce.service.order.OrderServiceImpl;
 import platform.ecommerce.service.product.ProductService;
 
@@ -35,7 +31,8 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
 
 /**
- * Unit tests for OrderService.
+ * Unit tests for OrderService (Domain Layer).
+ * Tests pure business logic with Entity assertions.
  */
 @ExtendWith(MockitoExtension.class)
 class OrderServiceTest {
@@ -45,15 +42,6 @@ class OrderServiceTest {
 
     @Mock
     private ProductService productService;
-
-    @Mock
-    private MemberRepository memberRepository;
-
-    @Mock
-    private EmailService emailService;
-
-    @Mock
-    private NotificationService notificationService;
 
     @InjectMocks
     private OrderServiceImpl orderService;
@@ -121,15 +109,15 @@ class OrderServiceTest {
             });
 
             // when
-            OrderResponse response = orderService.createOrder(MEMBER_ID, createRequest);
+            Order order = orderService.createOrder(MEMBER_ID, createRequest);
 
             // then
-            assertThat(response).isNotNull();
-            assertThat(response.memberId()).isEqualTo(MEMBER_ID);
-            assertThat(response.status()).isEqualTo(OrderStatus.PENDING_PAYMENT);
-            assertThat(response.shippingAddress().recipientName()).isEqualTo("John Doe");
-            assertThat(response.items()).hasSize(1);
-            assertThat(response.items().get(0).productName()).isEqualTo("Test Product");
+            assertThat(order).isNotNull();
+            assertThat(order.getMemberId()).isEqualTo(MEMBER_ID);
+            assertThat(order.getStatus()).isEqualTo(OrderStatus.PENDING_PAYMENT);
+            assertThat(order.getShippingAddress().getRecipientName()).isEqualTo("John Doe");
+            assertThat(order.getItems()).hasSize(1);
+            assertThat(order.getItems().get(0).getProductName()).isEqualTo("Test Product");
 
             // verify stock was decreased
             verify(productService).decreaseStock(1L, 10L, 2);
@@ -147,15 +135,15 @@ class OrderServiceTest {
             });
 
             // when
-            OrderResponse response = orderService.createOrder(MEMBER_ID, createRequest);
+            Order order = orderService.createOrder(MEMBER_ID, createRequest);
 
             // then
             // 29000 * 2 = 58000 subtotal
-            assertThat(response.subtotal()).isEqualByComparingTo(BigDecimal.valueOf(58000));
-            assertThat(response.shippingFee()).isEqualByComparingTo(BigDecimal.valueOf(3000));
-            assertThat(response.discountAmount()).isEqualByComparingTo(BigDecimal.ZERO);
+            assertThat(order.getSubtotal()).isEqualByComparingTo(BigDecimal.valueOf(58000));
+            assertThat(order.getShippingFee()).isEqualByComparingTo(BigDecimal.valueOf(3000));
+            assertThat(order.getDiscountAmount()).isEqualByComparingTo(BigDecimal.ZERO);
             // total = 58000 + 3000 - 0 = 61000
-            assertThat(response.totalAmount()).isEqualByComparingTo(BigDecimal.valueOf(61000));
+            assertThat(order.getTotalAmount()).isEqualByComparingTo(BigDecimal.valueOf(61000));
         }
     }
 
@@ -171,11 +159,11 @@ class OrderServiceTest {
             given(orderRepository.findByIdWithItems(ORDER_ID)).willReturn(Optional.of(testOrder));
 
             // when
-            OrderResponse response = orderService.getOrder(ORDER_ID, MEMBER_ID);
+            Order order = orderService.getOrder(ORDER_ID, MEMBER_ID);
 
             // then
-            assertThat(response.id()).isEqualTo(ORDER_ID);
-            assertThat(response.memberId()).isEqualTo(MEMBER_ID);
+            assertThat(order.getId()).isEqualTo(ORDER_ID);
+            assertThat(order.getMemberId()).isEqualTo(MEMBER_ID);
         }
 
         @Test
@@ -214,10 +202,10 @@ class OrderServiceTest {
                     .willReturn(Optional.of(testOrder));
 
             // when
-            OrderResponse response = orderService.getOrderByNumber("ORD-12345678", MEMBER_ID);
+            Order order = orderService.getOrderByNumber("ORD-12345678", MEMBER_ID);
 
             // then
-            assertThat(response.id()).isEqualTo(ORDER_ID);
+            assertThat(order.getId()).isEqualTo(ORDER_ID);
         }
 
         @Test
@@ -247,7 +235,7 @@ class OrderServiceTest {
                     .willReturn(orderPage);
 
             // when
-            Page<OrderResponse> response = orderService.getMyOrders(MEMBER_ID, pageable);
+            Page<Order> response = orderService.getMyOrders(MEMBER_ID, pageable);
 
             // then
             assertThat(response.getContent()).hasSize(1);
@@ -272,14 +260,14 @@ class OrderServiceTest {
             given(orderRepository.findByIdWithItems(ORDER_ID)).willReturn(Optional.of(testOrder));
 
             // when
-            OrderResponse response = orderService.processPayment(
+            Order order = orderService.processPayment(
                     ORDER_ID, PaymentMethod.CREDIT_CARD, "TXN-123456"
             );
 
             // then
-            assertThat(response.status()).isEqualTo(OrderStatus.PAID);
-            assertThat(response.paymentMethod()).isEqualTo(PaymentMethod.CREDIT_CARD);
-            assertThat(response.paidAt()).isNotNull();
+            assertThat(order.getStatus()).isEqualTo(OrderStatus.PAID);
+            assertThat(order.getPaymentMethod()).isEqualTo(PaymentMethod.CREDIT_CARD);
+            assertThat(order.getPaidAt()).isNotNull();
         }
 
         @Test
@@ -308,10 +296,10 @@ class OrderServiceTest {
             given(orderRepository.findByIdWithItems(ORDER_ID)).willReturn(Optional.of(testOrder));
 
             // when
-            OrderResponse response = orderService.startPreparing(ORDER_ID);
+            Order order = orderService.startPreparing(ORDER_ID);
 
             // then
-            assertThat(response.status()).isEqualTo(OrderStatus.PREPARING);
+            assertThat(order.getStatus()).isEqualTo(OrderStatus.PREPARING);
         }
 
         @Test
@@ -339,12 +327,12 @@ class OrderServiceTest {
             given(orderRepository.findByIdWithItems(ORDER_ID)).willReturn(Optional.of(testOrder));
 
             // when
-            OrderResponse response = orderService.shipOrder(ORDER_ID, "TRACK-123456");
+            Order order = orderService.shipOrder(ORDER_ID, "TRACK-123456");
 
             // then
-            assertThat(response.status()).isEqualTo(OrderStatus.SHIPPED);
-            assertThat(response.trackingNumber()).isEqualTo("TRACK-123456");
-            assertThat(response.shippedAt()).isNotNull();
+            assertThat(order.getStatus()).isEqualTo(OrderStatus.SHIPPED);
+            assertThat(order.getTrackingNumber()).isEqualTo("TRACK-123456");
+            assertThat(order.getShippedAt()).isNotNull();
         }
     }
 
@@ -362,11 +350,11 @@ class OrderServiceTest {
             given(orderRepository.findByIdWithItems(ORDER_ID)).willReturn(Optional.of(testOrder));
 
             // when
-            OrderResponse response = orderService.deliverOrder(ORDER_ID);
+            Order order = orderService.deliverOrder(ORDER_ID);
 
             // then
-            assertThat(response.status()).isEqualTo(OrderStatus.DELIVERED);
-            assertThat(response.deliveredAt()).isNotNull();
+            assertThat(order.getStatus()).isEqualTo(OrderStatus.DELIVERED);
+            assertThat(order.getDeliveredAt()).isNotNull();
         }
     }
 
@@ -382,11 +370,11 @@ class OrderServiceTest {
             given(orderRepository.findByIdWithItems(ORDER_ID)).willReturn(Optional.of(testOrder));
 
             // when
-            OrderResponse response = orderService.cancelOrder(ORDER_ID, MEMBER_ID, "Customer request");
+            Order order = orderService.cancelOrder(ORDER_ID, MEMBER_ID, "Customer request");
 
             // then
-            assertThat(response.status()).isEqualTo(OrderStatus.CANCELLED);
-            assertThat(response.cancelledAt()).isNotNull();
+            assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+            assertThat(order.getCancelledAt()).isNotNull();
 
             // verify stock was restored
             verify(productService).increaseStock(1L, 10L, 2);
@@ -434,10 +422,10 @@ class OrderServiceTest {
             given(orderRepository.findByIdWithItems(ORDER_ID)).willReturn(Optional.of(testOrder));
 
             // when
-            OrderResponse response = orderService.cancelOrderItem(ORDER_ID, MEMBER_ID, 50L, "Wrong item");
+            Order order = orderService.cancelOrderItem(ORDER_ID, MEMBER_ID, 50L, "Wrong item");
 
             // then
-            assertThat(response.items().get(0).status()).isEqualTo(OrderItemStatus.CANCELLED);
+            assertThat(order.getItems().get(0).getStatus()).isEqualTo(OrderItemStatus.CANCELLED);
             verify(productService).increaseStock(1L, 10L, 2);
         }
 
@@ -469,7 +457,7 @@ class OrderServiceTest {
             given(orderRepository.search(condition, pageable)).willReturn(orderPage);
 
             // when
-            Page<OrderResponse> response = orderService.searchOrders(condition, pageable);
+            Page<Order> response = orderService.searchOrders(condition, pageable);
 
             // then
             assertThat(response.getContent()).hasSize(1);

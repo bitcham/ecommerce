@@ -14,7 +14,7 @@ import platform.ecommerce.dto.response.ApiResponse;
 import platform.ecommerce.dto.response.PageResponse;
 import platform.ecommerce.dto.response.notification.NotificationResponse;
 import platform.ecommerce.security.SecurityUtils;
-import platform.ecommerce.service.notification.NotificationService;
+import platform.ecommerce.service.application.NotificationApplicationService;
 
 import java.util.List;
 
@@ -27,7 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NotificationController {
 
-    private final NotificationService notificationService;
+    private final NotificationApplicationService notificationApplicationService;
 
     @Operation(summary = "Get notifications", description = "Get paginated notifications for member")
     @GetMapping
@@ -36,7 +36,7 @@ public class NotificationController {
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        PageResponse<NotificationResponse> response = notificationService.getNotifications(memberId, pageable);
+        PageResponse<NotificationResponse> response = notificationApplicationService.getNotifications(memberId, pageable);
         return ApiResponse.success(response);
     }
 
@@ -47,7 +47,7 @@ public class NotificationController {
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        PageResponse<NotificationResponse> response = notificationService.getUnreadNotifications(memberId, pageable);
+        PageResponse<NotificationResponse> response = notificationApplicationService.getUnreadNotifications(memberId, pageable);
         return ApiResponse.success(response);
     }
 
@@ -56,7 +56,7 @@ public class NotificationController {
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<List<NotificationResponse>> getRecentNotifications() {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        List<NotificationResponse> response = notificationService.getRecentNotifications(memberId);
+        List<NotificationResponse> response = notificationApplicationService.getRecentNotifications(memberId);
         return ApiResponse.success(response);
     }
 
@@ -65,7 +65,7 @@ public class NotificationController {
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<Long> getUnreadCount() {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        long count = notificationService.getUnreadCount(memberId);
+        long count = notificationApplicationService.getUnreadCount(memberId);
         return ApiResponse.success(count);
     }
 
@@ -77,7 +77,7 @@ public class NotificationController {
             @Parameter(description = "Notification ID") @PathVariable Long notificationId
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        notificationService.markAsRead(notificationId, memberId);
+        notificationApplicationService.markAsRead(notificationId, memberId);
     }
 
     @Operation(summary = "Mark all as read", description = "Mark all notifications as read")
@@ -85,7 +85,7 @@ public class NotificationController {
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<Integer> markAllAsRead() {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        int count = notificationService.markAllAsRead(memberId);
+        int count = notificationApplicationService.markAllAsRead(memberId);
         return ApiResponse.success(count);
     }
 }

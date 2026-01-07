@@ -14,8 +14,9 @@ import platform.ecommerce.dto.response.wishlist.WishlistResponse;
 import platform.ecommerce.exception.DuplicateResourceException;
 import platform.ecommerce.exception.EntityNotFoundException;
 import platform.ecommerce.exception.ErrorCode;
+import platform.ecommerce.mapper.WishlistMapper;
 import platform.ecommerce.repository.WishlistRepository;
-import platform.ecommerce.service.product.ProductService;
+import platform.ecommerce.service.application.ProductApplicationService;
 
 /**
  * Wishlist service implementation.
@@ -27,7 +28,8 @@ import platform.ecommerce.service.product.ProductService;
 public class WishlistServiceImpl implements WishlistService {
 
     private final WishlistRepository wishlistRepository;
-    private final ProductService productService;
+    private final ProductApplicationService productApplicationService;
+    private final WishlistMapper wishlistMapper;
 
     @Override
     @Transactional
@@ -40,14 +42,14 @@ public class WishlistServiceImpl implements WishlistService {
         }
 
         // 2. Verify product exists (will throw EntityNotFoundException if not found)
-        productService.getProduct(productId);
+        productApplicationService.getProduct(productId);
 
         // 3. Save wishlist
         Wishlist wishlist = Wishlist.of(memberId, productId);
         Wishlist savedWishlist = wishlistRepository.save(wishlist);
 
         log.info("Product added to wishlist: memberId={}, productId={}", memberId, productId);
-        return toResponse(savedWishlist);
+        return wishlistMapper.toResponse(savedWishlist);
     }
 
     @Override
@@ -70,7 +72,7 @@ public class WishlistServiceImpl implements WishlistService {
 
         Page<WishlistItemResponse> responsePage = wishlistPage.map(wishlist -> {
             try {
-                ProductResponse product = productService.getProduct(wishlist.getProductId());
+                ProductResponse product = productApplicationService.getProduct(wishlist.getProductId());
                 return WishlistItemResponse.builder()
                         .wishlistId(wishlist.getId())
                         .productId(wishlist.getProductId())
@@ -106,16 +108,5 @@ public class WishlistServiceImpl implements WishlistService {
     @Override
     public long getWishlistCount(Long memberId) {
         return wishlistRepository.countByMemberId(memberId);
-    }
-
-    // ========== Private Helper Methods ==========
-
-    private WishlistResponse toResponse(Wishlist wishlist) {
-        return WishlistResponse.builder()
-                .id(wishlist.getId())
-                .memberId(wishlist.getMemberId())
-                .productId(wishlist.getProductId())
-                .createdAt(wishlist.getCreatedAt())
-                .build();
     }
 }

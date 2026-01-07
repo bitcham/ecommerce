@@ -18,7 +18,7 @@ import platform.ecommerce.dto.request.order.*;
 import platform.ecommerce.dto.response.*;
 import platform.ecommerce.dto.response.order.*;
 import platform.ecommerce.security.SecurityUtils;
-import platform.ecommerce.service.order.OrderService;
+import platform.ecommerce.service.application.OrderApplicationService;
 
 import java.time.LocalDateTime;
 
@@ -31,7 +31,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class OrderController {
 
-    private final OrderService orderService;
+    private final OrderApplicationService orderApplicationService;
 
     @Operation(summary = "Create order", description = "Create a new order")
     @PostMapping
@@ -41,7 +41,7 @@ public class OrderController {
             @Valid @RequestBody OrderCreateRequest request
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        OrderResponse response = orderService.createOrder(memberId, request);
+        OrderResponse response = orderApplicationService.createOrder(memberId, request);
         return ApiResponse.created(response);
     }
 
@@ -52,7 +52,7 @@ public class OrderController {
             @Parameter(description = "Order ID") @PathVariable Long orderId
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        OrderResponse response = orderService.getOrder(orderId, memberId);
+        OrderResponse response = orderApplicationService.getOrder(orderId, memberId);
         return ApiResponse.success(response);
     }
 
@@ -63,7 +63,7 @@ public class OrderController {
             @Parameter(description = "Order number") @PathVariable String orderNumber
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        OrderResponse response = orderService.getOrderByNumber(orderNumber, memberId);
+        OrderResponse response = orderApplicationService.getOrderByNumber(orderNumber, memberId);
         return ApiResponse.success(response);
     }
 
@@ -74,7 +74,7 @@ public class OrderController {
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        Page<OrderResponse> response = orderService.getMyOrders(memberId, pageable);
+        Page<OrderResponse> response = orderApplicationService.getMyOrders(memberId, pageable);
         return ApiResponse.success(response);
     }
 
@@ -92,7 +92,7 @@ public class OrderController {
         OrderSearchCondition condition = new OrderSearchCondition(
                 memberId, status, orderNumber, startDate, endDate
         );
-        Page<OrderResponse> response = orderService.searchOrders(condition, pageable);
+        Page<OrderResponse> response = orderApplicationService.searchOrders(condition, pageable);
         return ApiResponse.success(response);
     }
 
@@ -105,7 +105,7 @@ public class OrderController {
             @Parameter(description = "Order ID") @PathVariable Long orderId,
             @Valid @RequestBody PaymentRequest request
     ) {
-        OrderResponse response = orderService.processPayment(
+        OrderResponse response = orderApplicationService.processPayment(
                 orderId, request.paymentMethod(), request.transactionId()
         );
         return ApiResponse.success(response);
@@ -117,7 +117,7 @@ public class OrderController {
     public ApiResponse<OrderResponse> startPreparing(
             @Parameter(description = "Order ID") @PathVariable Long orderId
     ) {
-        OrderResponse response = orderService.startPreparing(orderId);
+        OrderResponse response = orderApplicationService.startPreparing(orderId);
         return ApiResponse.success(response);
     }
 
@@ -128,7 +128,7 @@ public class OrderController {
             @Parameter(description = "Order ID") @PathVariable Long orderId,
             @Parameter(description = "Tracking number") @RequestParam String trackingNumber
     ) {
-        OrderResponse response = orderService.shipOrder(orderId, trackingNumber);
+        OrderResponse response = orderApplicationService.shipOrder(orderId, trackingNumber);
         return ApiResponse.success(response);
     }
 
@@ -138,7 +138,7 @@ public class OrderController {
     public ApiResponse<OrderResponse> deliverOrder(
             @Parameter(description = "Order ID") @PathVariable Long orderId
     ) {
-        OrderResponse response = orderService.deliverOrder(orderId);
+        OrderResponse response = orderApplicationService.deliverOrder(orderId);
         return ApiResponse.success(response);
     }
 
@@ -150,7 +150,7 @@ public class OrderController {
             @Parameter(description = "Cancel reason") @RequestParam String reason
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        OrderResponse response = orderService.cancelOrder(orderId, memberId, reason);
+        OrderResponse response = orderApplicationService.cancelOrder(orderId, memberId, reason);
         return ApiResponse.success(response);
     }
 
@@ -163,7 +163,7 @@ public class OrderController {
             @Parameter(description = "Cancel reason") @RequestParam String reason
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        OrderResponse response = orderService.cancelOrderItem(orderId, memberId, itemId, reason);
+        OrderResponse response = orderApplicationService.cancelOrderItem(orderId, memberId, itemId, reason);
         return ApiResponse.success(response);
     }
 }

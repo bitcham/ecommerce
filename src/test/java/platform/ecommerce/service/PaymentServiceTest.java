@@ -12,7 +12,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import platform.ecommerce.domain.order.*;
 import platform.ecommerce.domain.payment.Payment;
 import platform.ecommerce.domain.payment.PaymentStatus;
-import platform.ecommerce.dto.response.payment.PaymentResponse;
 import platform.ecommerce.exception.EntityNotFoundException;
 import platform.ecommerce.exception.InvalidStateException;
 import platform.ecommerce.repository.PaymentRepository;
@@ -31,7 +30,7 @@ import static org.mockito.BDDMockito.*;
 
 /**
  * Unit tests for PaymentService.
- * TDD: Tests written before implementation.
+ * Tests pure business logic with Entity returns.
  */
 @ExtendWith(MockitoExtension.class)
 class PaymentServiceTest {
@@ -100,15 +99,15 @@ class PaymentServiceTest {
             });
 
             // when
-            PaymentResponse response = paymentService.requestPayment(ORDER_ID, PaymentMethod.CREDIT_CARD);
+            Payment result = paymentService.requestPayment(ORDER_ID, PaymentMethod.CREDIT_CARD);
 
             // then
-            assertThat(response).isNotNull();
-            assertThat(response.orderId()).isEqualTo(ORDER_ID);
-            assertThat(response.status()).isEqualTo(PaymentStatus.PENDING);
-            assertThat(response.method()).isEqualTo(PaymentMethod.CREDIT_CARD);
-            assertThat(response.amount()).isEqualByComparingTo(AMOUNT);
-            assertThat(response.transactionId()).startsWith("PAY-");
+            assertThat(result).isNotNull();
+            assertThat(result.getOrderId()).isEqualTo(ORDER_ID);
+            assertThat(result.getStatus()).isEqualTo(PaymentStatus.PENDING);
+            assertThat(result.getMethod()).isEqualTo(PaymentMethod.CREDIT_CARD);
+            assertThat(result.getAmount()).isEqualByComparingTo(AMOUNT);
+            assertThat(result.getTransactionId()).startsWith("PAY-");
 
             verify(paymentRepository).save(any(Payment.class));
         }
@@ -154,12 +153,12 @@ class PaymentServiceTest {
                     .willReturn(PaymentResult.success("PG-12345678"));
 
             // when
-            PaymentResponse response = paymentService.confirmPayment(transactionId, AMOUNT);
+            Payment result = paymentService.confirmPayment(transactionId, AMOUNT);
 
             // then
-            assertThat(response.status()).isEqualTo(PaymentStatus.COMPLETED);
-            assertThat(response.pgTransactionId()).isEqualTo("PG-12345678");
-            assertThat(response.paidAt()).isNotNull();
+            assertThat(result.getStatus()).isEqualTo(PaymentStatus.COMPLETED);
+            assertThat(result.getPgTransactionId()).isEqualTo("PG-12345678");
+            assertThat(result.getPaidAt()).isNotNull();
 
             // verify order was marked as paid
             assertThat(testOrder.getStatus()).isEqualTo(OrderStatus.PAID);
@@ -175,11 +174,11 @@ class PaymentServiceTest {
                     .willReturn(PaymentResult.failure("Card declined"));
 
             // when
-            PaymentResponse response = paymentService.confirmPayment(transactionId, AMOUNT);
+            Payment result = paymentService.confirmPayment(transactionId, AMOUNT);
 
             // then
-            assertThat(response.status()).isEqualTo(PaymentStatus.FAILED);
-            assertThat(response.failReason()).isEqualTo("Card declined");
+            assertThat(result.getStatus()).isEqualTo(PaymentStatus.FAILED);
+            assertThat(result.getFailReason()).isEqualTo("Card declined");
         }
 
         @Test
@@ -238,11 +237,11 @@ class PaymentServiceTest {
                     .willReturn(PaymentResult.success("PG-12345678"));
 
             // when
-            PaymentResponse response = paymentService.cancelPayment(PAYMENT_ID, MEMBER_ID);
+            Payment result = paymentService.cancelPayment(PAYMENT_ID, MEMBER_ID);
 
             // then
-            assertThat(response.status()).isEqualTo(PaymentStatus.CANCELLED);
-            assertThat(response.cancelledAt()).isNotNull();
+            assertThat(result.getStatus()).isEqualTo(PaymentStatus.CANCELLED);
+            assertThat(result.getCancelledAt()).isNotNull();
         }
 
         @Test
@@ -296,11 +295,11 @@ class PaymentServiceTest {
             given(orderRepository.findById(ORDER_ID)).willReturn(Optional.of(testOrder));
 
             // when
-            PaymentResponse response = paymentService.getPayment(PAYMENT_ID, MEMBER_ID);
+            Payment result = paymentService.getPayment(PAYMENT_ID, MEMBER_ID);
 
             // then
-            assertThat(response.id()).isEqualTo(PAYMENT_ID);
-            assertThat(response.orderId()).isEqualTo(ORDER_ID);
+            assertThat(result.getId()).isEqualTo(PAYMENT_ID);
+            assertThat(result.getOrderId()).isEqualTo(ORDER_ID);
         }
 
         @Test
@@ -347,12 +346,12 @@ class PaymentServiceTest {
                     .willReturn(List.of(testPayment, payment2));
 
             // when
-            List<PaymentResponse> responses = paymentService.getPaymentsByOrderId(ORDER_ID, MEMBER_ID);
+            List<Payment> results = paymentService.getPaymentsByOrderId(ORDER_ID, MEMBER_ID);
 
             // then
-            assertThat(responses).hasSize(2);
-            assertThat(responses.get(0).orderId()).isEqualTo(ORDER_ID);
-            assertThat(responses.get(1).orderId()).isEqualTo(ORDER_ID);
+            assertThat(results).hasSize(2);
+            assertThat(results.get(0).getOrderId()).isEqualTo(ORDER_ID);
+            assertThat(results.get(1).getOrderId()).isEqualTo(ORDER_ID);
         }
 
         @Test
@@ -363,10 +362,10 @@ class PaymentServiceTest {
             given(paymentRepository.findByOrderIdOrderByCreatedAtDesc(ORDER_ID)).willReturn(List.of());
 
             // when
-            List<PaymentResponse> responses = paymentService.getPaymentsByOrderId(ORDER_ID, MEMBER_ID);
+            List<Payment> results = paymentService.getPaymentsByOrderId(ORDER_ID, MEMBER_ID);
 
             // then
-            assertThat(responses).isEmpty();
+            assertThat(results).isEmpty();
         }
     }
 }

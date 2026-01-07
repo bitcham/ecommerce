@@ -15,8 +15,6 @@ import org.springframework.data.domain.Pageable;
 import platform.ecommerce.domain.product.Product;
 import platform.ecommerce.dto.request.product.ProductSearchCondition;
 import platform.ecommerce.dto.request.product.ProductSortType;
-import platform.ecommerce.dto.response.PageResponse;
-import platform.ecommerce.dto.response.product.ProductResponse;
 import platform.ecommerce.repository.product.ProductRepository;
 import platform.ecommerce.service.product.ProductServiceImpl;
 
@@ -62,7 +60,7 @@ class ProductSearchTest {
             given(productRepository.searchProducts(any(), eq(pageable))).willReturn(productPage);
 
             // when
-            PageResponse<ProductResponse> result = productService.searchProducts(condition, pageable);
+            Page<Product> result = productService.searchProducts(condition, pageable);
 
             // then
             assertThat(result.getContent()).hasSize(1);
@@ -82,7 +80,7 @@ class ProductSearchTest {
             given(productRepository.searchProducts(any(), eq(pageable))).willReturn(emptyPage);
 
             // when
-            PageResponse<ProductResponse> result = productService.searchProducts(condition, pageable);
+            Page<Product> result = productService.searchProducts(condition, pageable);
 
             // then
             assertThat(result.getContent()).isEmpty();
@@ -104,7 +102,7 @@ class ProductSearchTest {
             given(productRepository.searchProducts(any(), eq(pageable))).willReturn(productPage);
 
             // when
-            PageResponse<ProductResponse> result = productService.searchProducts(condition, pageable);
+            Page<Product> result = productService.searchProducts(condition, pageable);
 
             // then
             assertThat(result.getContent()).hasSize(2);
@@ -218,7 +216,7 @@ class ProductSearchTest {
             given(productRepository.searchProducts(any(), eq(pageable))).willReturn(productPage);
 
             // when
-            PageResponse<ProductResponse> result = productService.searchProducts(condition, pageable);
+            productService.searchProducts(condition, pageable);
 
             // then
             ArgumentCaptor<ProductSearchCondition> captor = ArgumentCaptor.forClass(ProductSearchCondition.class);
@@ -244,7 +242,7 @@ class ProductSearchTest {
             given(productRepository.searchProducts(any(), eq(pageable))).willReturn(productPage);
 
             // when
-            PageResponse<ProductResponse> result = productService.searchProducts(condition, pageable);
+            productService.searchProducts(condition, pageable);
 
             // then
             ArgumentCaptor<ProductSearchCondition> captor = ArgumentCaptor.forClass(ProductSearchCondition.class);
@@ -270,7 +268,7 @@ class ProductSearchTest {
             given(productRepository.searchProducts(any(), eq(pageable))).willReturn(productPage);
 
             // when
-            PageResponse<ProductResponse> result = productService.searchProducts(condition, pageable);
+            productService.searchProducts(condition, pageable);
 
             // then
             ArgumentCaptor<ProductSearchCondition> captor = ArgumentCaptor.forClass(ProductSearchCondition.class);

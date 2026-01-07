@@ -12,22 +12,20 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import platform.ecommerce.domain.auth.EmailVerificationToken;
 import platform.ecommerce.domain.auth.RefreshToken;
 import platform.ecommerce.domain.member.Member;
-import platform.ecommerce.domain.member.MemberStatus;
 import platform.ecommerce.dto.request.LoginRequest;
 import platform.ecommerce.dto.request.MemberCreateRequest;
 import platform.ecommerce.dto.request.TokenRefreshRequest;
-import platform.ecommerce.dto.response.LoginResponse;
-import platform.ecommerce.dto.response.MemberResponse;
-import platform.ecommerce.dto.response.TokenResponse;
 import platform.ecommerce.exception.*;
 import platform.ecommerce.fixture.MemberFixture;
-import platform.ecommerce.mapper.MemberMapper;
 import platform.ecommerce.repository.EmailVerificationTokenRepository;
 import platform.ecommerce.repository.MemberRepository;
 import platform.ecommerce.repository.PasswordResetTokenRepository;
 import platform.ecommerce.repository.RefreshTokenRepository;
 import platform.ecommerce.security.JwtTokenProvider;
-import platform.ecommerce.service.email.EmailService;
+import platform.ecommerce.service.auth.EmailNotificationInfo;
+import platform.ecommerce.service.auth.LoginResult;
+import platform.ecommerce.service.auth.RegistrationResult;
+import platform.ecommerce.service.auth.TokenResult;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -39,6 +37,7 @@ import static org.mockito.Mockito.*;
 
 /**
  * AuthService unit tests.
+ * Tests pure domain logic without DTO conversion or email side effects.
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AuthService Tests")
@@ -63,12 +62,6 @@ class AuthServiceTest {
     private JwtTokenProvider jwtTokenProvider;
 
     @Mock
-    private MemberMapper memberMapper;
-
-    @Mock
-    private EmailService emailService;
-
-    @Mock
     private HttpServletRequest httpServletRequest;
 
     @InjectMocks
@@ -79,8 +72,8 @@ class AuthServiceTest {
     class Register {
 
         @Test
-        @DisplayName("Should register member with valid request")
-        void register_withValidRequest_shouldSucceed() {
+        @DisplayName("Should register member and return RegistrationResult")
+        void register_withValidRequest_shouldReturnRegistrationResult() {
             // given
             MemberCreateRequest request = MemberCreateRequest.builder()
                     .email("test@example.com")
@@ -91,26 +84,23 @@ class AuthServiceTest {
                     .build();
 
             Member member = MemberFixture.createPendingMember();
-            MemberResponse expectedResponse = MemberResponse.builder()
-                    .id(1L)
-                    .email("test@example.com")
-                    .name("TestUser")
-                    .status(MemberStatus.PENDING)
-                    .build();
+            org.springframework.test.util.ReflectionTestUtils.setField(member, "id", 1L);
 
             given(memberRepository.existsByEmail(anyString())).willReturn(false);
             given(passwordEncoder.encode(anyString())).willReturn("encodedPassword");
             given(memberRepository.save(any(Member.class))).willReturn(member);
+            // save() returns the passed argument - used for verification only
             given(emailVerificationTokenRepository.save(any(EmailVerificationToken.class)))
-                    .willReturn(mock(EmailVerificationToken.class));
-            given(memberMapper.toResponse(any(Member.class))).willReturn(expectedResponse);
+                    .willAnswer(invocation -> invocation.getArgument(0));
 
             // when
-            MemberResponse result = authService.register(request);
+            RegistrationResult result = authService.register(request);
 
             // then
             assertThat(result).isNotNull();
-            assertThat(result.email()).isEqualTo("test@example.com");
+            assertThat(result.member()).isNotNull();
+            assertThat(result.member().getEmail()).isEqualTo("test@example.com");
+            assertThat(result.verificationToken()).isNotNull();
             verify(emailVerificationTokenRepository).save(any(EmailVerificationToken.class));
         }
 
@@ -154,8 +144,8 @@ class AuthServiceTest {
     class Login {
 
         @Test
-        @DisplayName("Should login successfully with valid credentials")
-        void login_withValidCredentials_shouldSucceed() {
+        @DisplayName("Should return LoginResult with valid credentials")
+        void login_withValidCredentials_shouldReturnLoginResult() {
             // given
             LoginRequest request = LoginRequest.builder()
                     .email("test@example.com")
@@ -168,30 +158,26 @@ class AuthServiceTest {
             RefreshToken refreshToken = mock(RefreshToken.class);
             given(refreshToken.getToken()).willReturn("refresh-token-value");
 
-            MemberResponse memberResponse = MemberResponse.builder()
-                    .id(1L)
-                    .email("test@example.com")
-                    .build();
-
             given(memberRepository.findByEmail("test@example.com")).willReturn(Optional.of(member));
             given(passwordEncoder.matches("Password1!", member.getPassword())).willReturn(true);
             given(jwtTokenProvider.generateAccessToken(member)).willReturn("access-token");
             given(jwtTokenProvider.getAccessTokenExpirationSeconds()).willReturn(900L);
             given(jwtTokenProvider.getRefreshTokenExpirationDays()).willReturn(7L);
             given(refreshTokenRepository.save(any(RefreshToken.class))).willReturn(refreshToken);
-            given(memberMapper.toResponse(member)).willReturn(memberResponse);
 
             given(httpServletRequest.getHeader("User-Agent")).willReturn("TestBrowser");
             given(httpServletRequest.getHeader("X-Forwarded-For")).willReturn(null);
             given(httpServletRequest.getRemoteAddr()).willReturn("127.0.0.1");
 
             // when
-            LoginResponse result = authService.login(request, httpServletRequest);
+            LoginResult result = authService.login(request, httpServletRequest);
 
             // then
             assertThat(result).isNotNull();
-            assertThat(result.tokens().accessToken()).isEqualTo("access-token");
-            assertThat(result.member().id()).isEqualTo(1L);
+            assertThat(result.member()).isEqualTo(member);
+            assertThat(result.accessToken()).isEqualTo("access-token");
+            assertThat(result.refreshToken()).isEqualTo("refresh-token-value");
+            assertThat(result.expiresIn()).isEqualTo(900L);
         }
 
         @Test
@@ -270,8 +256,8 @@ class AuthServiceTest {
     class TokenRefresh {
 
         @Test
-        @DisplayName("Should refresh tokens with valid refresh token")
-        void refreshToken_withValidToken_shouldSucceed() {
+        @DisplayName("Should return TokenResult with valid refresh token")
+        void refreshToken_withValidToken_shouldReturnTokenResult() {
             // given
             TokenRefreshRequest request = TokenRefreshRequest.builder()
                     .refreshToken("valid-refresh-token")
@@ -291,12 +277,13 @@ class AuthServiceTest {
             given(jwtTokenProvider.getRefreshTokenExpirationDays()).willReturn(7L);
 
             // when
-            TokenResponse result = authService.refreshToken(request);
+            TokenResult result = authService.refreshToken(request);
 
             // then
             assertThat(result).isNotNull();
             assertThat(result.accessToken()).isEqualTo("new-access-token");
             assertThat(result.refreshToken()).isEqualTo("new-refresh-token");
+            assertThat(result.expiresIn()).isEqualTo(900L);
             verify(refreshToken).rotate(7L);
         }
 
@@ -402,43 +389,48 @@ class AuthServiceTest {
     }
 
     @Nested
-    @DisplayName("Resend Verification Email")
-    class ResendVerification {
+    @DisplayName("Create Verification Token")
+    class CreateVerificationToken {
 
         @Test
-        @DisplayName("Should create new verification token")
-        void resendVerificationEmail_shouldCreateNewToken() {
+        @DisplayName("Should create new verification token and return EmailNotificationInfo")
+        void createVerificationToken_shouldReturnEmailNotificationInfo() {
             // given
             String email = "test@example.com";
             Member member = MemberFixture.createPendingMember();
             org.springframework.test.util.ReflectionTestUtils.setField(member, "id", 1L);
 
             given(memberRepository.findByEmail(email)).willReturn(Optional.of(member));
+            // save() returns the passed argument - we use local token's getToken()
             given(emailVerificationTokenRepository.save(any(EmailVerificationToken.class)))
-                    .willReturn(mock(EmailVerificationToken.class));
+                    .willAnswer(invocation -> invocation.getArgument(0));
 
             // when
-            authService.resendVerificationEmail(email);
+            EmailNotificationInfo result = authService.createVerificationToken(email);
 
             // then
+            assertThat(result).isNotNull();
+            assertThat(result.email()).isEqualTo(member.getEmail());
+            assertThat(result.name()).isEqualTo(member.getName());
+            assertThat(result.token()).isNotNull();
             verify(emailVerificationTokenRepository).save(any(EmailVerificationToken.class));
         }
 
         @Test
         @DisplayName("Should throw exception for non-existent email")
-        void resendVerificationEmail_withNonExistentEmail_shouldThrowException() {
+        void createVerificationToken_withNonExistentEmail_shouldThrowException() {
             // given
             String email = "nonexistent@example.com";
             given(memberRepository.findByEmail(email)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> authService.resendVerificationEmail(email))
+            assertThatThrownBy(() -> authService.createVerificationToken(email))
                     .isInstanceOf(EntityNotFoundException.class);
         }
 
         @Test
         @DisplayName("Should throw exception for already verified email")
-        void resendVerificationEmail_withVerifiedEmail_shouldThrowException() {
+        void createVerificationToken_withVerifiedEmail_shouldThrowException() {
             // given
             String email = "test@example.com";
             Member member = MemberFixture.createActiveMember(); // Already verified
@@ -446,7 +438,7 @@ class AuthServiceTest {
             given(memberRepository.findByEmail(email)).willReturn(Optional.of(member));
 
             // when & then
-            assertThatThrownBy(() -> authService.resendVerificationEmail(email))
+            assertThatThrownBy(() -> authService.createVerificationToken(email))
                     .isInstanceOf(InvalidStateException.class);
         }
     }

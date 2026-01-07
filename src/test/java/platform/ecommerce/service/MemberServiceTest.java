@@ -13,14 +13,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import platform.ecommerce.domain.member.Member;
+import platform.ecommerce.domain.member.MemberAddress;
 import platform.ecommerce.domain.member.MemberStatus;
 import platform.ecommerce.dto.request.*;
-import platform.ecommerce.dto.response.*;
 import platform.ecommerce.exception.DuplicateResourceException;
 import platform.ecommerce.exception.EntityNotFoundException;
 import platform.ecommerce.exception.InvalidStateException;
 import platform.ecommerce.fixture.MemberFixture;
-import platform.ecommerce.mapper.MemberMapper;
 import platform.ecommerce.repository.MemberRepository;
 
 import java.util.List;
@@ -34,6 +33,7 @@ import static org.mockito.Mockito.*;
 
 /**
  * MemberService unit tests.
+ * Tests pure business logic with Entity returns.
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("MemberService Tests")
@@ -41,9 +41,6 @@ class MemberServiceTest {
 
     @Mock
     private MemberRepository memberRepository;
-
-    @Mock
-    private MemberMapper memberMapper;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -68,24 +65,17 @@ class MemberServiceTest {
                     .build();
 
             Member member = MemberFixture.createPendingMember();
-            MemberResponse expectedResponse = MemberResponse.builder()
-                    .id(1L)
-                    .email("test@example.com")
-                    .name("TestUser")
-                    .status(MemberStatus.PENDING)
-                    .build();
 
             given(memberRepository.existsByEmail(anyString())).willReturn(false);
             given(passwordEncoder.encode(anyString())).willReturn("encodedPassword");
             given(memberRepository.save(any(Member.class))).willReturn(member);
-            given(memberMapper.toResponse(any(Member.class))).willReturn(expectedResponse);
 
             // when
-            MemberResponse result = memberService.register(request);
+            Member result = memberService.register(request);
 
             // then
             assertThat(result).isNotNull();
-            assertThat(result.email()).isEqualTo("test@example.com");
+            assertThat(result.getEmail()).isEqualTo("test@example.com");
             verify(memberRepository).existsByEmail("test@example.com");
             verify(memberRepository).save(any(Member.class));
         }
@@ -135,21 +125,16 @@ class MemberServiceTest {
             // given
             Long memberId = 1L;
             Member member = MemberFixture.createActiveMember();
-            MemberResponse expectedResponse = MemberResponse.builder()
-                    .id(memberId)
-                    .email("test@example.com")
-                    .name("TestUser")
-                    .build();
+            org.springframework.test.util.ReflectionTestUtils.setField(member, "id", memberId);
 
             given(memberRepository.findById(memberId)).willReturn(Optional.of(member));
-            given(memberMapper.toResponse(member)).willReturn(expectedResponse);
 
             // when
-            MemberResponse result = memberService.getMember(memberId);
+            Member result = memberService.getMember(memberId);
 
             // then
             assertThat(result).isNotNull();
-            assertThat(result.id()).isEqualTo(memberId);
+            assertThat(result.getId()).isEqualTo(memberId);
         }
 
         @Test
@@ -178,21 +163,16 @@ class MemberServiceTest {
 
             Member member = MemberFixture.createActiveMember();
             Page<Member> memberPage = new PageImpl<>(List.of(member), pageable, 1);
-            MemberResponse memberResponse = MemberResponse.builder()
-                    .id(1L)
-                    .email("test@example.com")
-                    .build();
 
             given(memberRepository.searchMembers(condition, pageable)).willReturn(memberPage);
-            given(memberMapper.toResponse(member)).willReturn(memberResponse);
 
             // when
-            PageResponse<MemberResponse> result = memberService.searchMembers(condition, pageable);
+            Page<Member> result = memberService.searchMembers(condition, pageable);
 
             // then
             assertThat(result).isNotNull();
             assertThat(result.getContent()).hasSize(1);
-            assertThat(result.getPage().getTotalElements()).isEqualTo(1);
+            assertThat(result.getTotalElements()).isEqualTo(1);
         }
     }
 
@@ -210,21 +190,15 @@ class MemberServiceTest {
                     .name("UpdatedName")
                     .phone("010-9999-8888")
                     .build();
-            MemberResponse expectedResponse = MemberResponse.builder()
-                    .id(memberId)
-                    .name("UpdatedName")
-                    .phone("010-9999-8888")
-                    .build();
 
             given(memberRepository.findById(memberId)).willReturn(Optional.of(member));
-            given(memberMapper.toResponse(member)).willReturn(expectedResponse);
 
             // when
-            MemberResponse result = memberService.updateProfile(memberId, request);
+            Member result = memberService.updateProfile(memberId, request);
 
             // then
             assertThat(result).isNotNull();
-            assertThat(result.name()).isEqualTo("UpdatedName");
+            assertThat(result.getName()).isEqualTo("UpdatedName");
         }
     }
 
@@ -323,21 +297,16 @@ class MemberServiceTest {
             // given
             Long memberId = 1L;
             Member member = MemberFixture.createWithdrawnMember();
-            MemberResponse expectedResponse = MemberResponse.builder()
-                    .id(memberId)
-                    .status(MemberStatus.PENDING)
-                    .build();
 
             given(memberRepository.findById(memberId)).willReturn(Optional.of(member));
-            given(memberMapper.toResponse(member)).willReturn(expectedResponse);
 
             // when
-            MemberResponse result = memberService.restore(memberId);
+            Member result = memberService.restore(memberId);
 
             // then
             assertThat(result).isNotNull();
-            assertThat(member.getStatus()).isEqualTo(MemberStatus.PENDING);
-            assertThat(member.isDeleted()).isFalse();
+            assertThat(result.getStatus()).isEqualTo(MemberStatus.PENDING);
+            assertThat(result.isDeleted()).isFalse();
         }
 
         @Test
@@ -373,21 +342,15 @@ class MemberServiceTest {
                     .addressDetail("Apt 101")
                     .isDefault(true)
                     .build();
-            AddressResponse expectedResponse = AddressResponse.builder()
-                    .id(1L)
-                    .name("Home")
-                    .isDefault(true)
-                    .build();
 
             given(memberRepository.findById(memberId)).willReturn(Optional.of(member));
-            given(memberMapper.toAddressResponse(any())).willReturn(expectedResponse);
 
             // when
-            AddressResponse result = memberService.addAddress(memberId, request);
+            MemberAddress result = memberService.addAddress(memberId, request);
 
             // then
             assertThat(result).isNotNull();
-            assertThat(result.name()).isEqualTo("Home");
+            assertThat(result.getName()).isEqualTo("Home");
             assertThat(member.getAddresses()).hasSize(1);
         }
 

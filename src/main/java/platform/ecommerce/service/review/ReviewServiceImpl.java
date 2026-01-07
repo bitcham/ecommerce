@@ -18,6 +18,7 @@ import platform.ecommerce.dto.response.review.ReviewStatisticsResponse;
 import platform.ecommerce.exception.EntityNotFoundException;
 import platform.ecommerce.exception.ErrorCode;
 import platform.ecommerce.exception.InvalidStateException;
+import platform.ecommerce.mapper.ReviewMapper;
 import platform.ecommerce.repository.review.ReviewRepository;
 
 import java.util.HashMap;
@@ -34,6 +35,7 @@ import java.util.Map;
 public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
+    private final ReviewMapper reviewMapper;
 
     @Override
     @Transactional
@@ -62,7 +64,7 @@ public class ReviewServiceImpl implements ReviewService {
         Review savedReview = reviewRepository.save(review);
         log.info("Review created: id={}", savedReview.getId());
 
-        return toResponse(savedReview);
+        return reviewMapper.toResponse(savedReview);
     }
 
     @Override
@@ -88,31 +90,31 @@ public class ReviewServiceImpl implements ReviewService {
         Review savedReview = reviewRepository.save(review);
         log.info("Review created: id={}", savedReview.getId());
 
-        return toResponse(savedReview);
+        return reviewMapper.toResponse(savedReview);
     }
 
     @Override
     public ReviewResponse getReview(Long reviewId) {
         Review review = findReviewById(reviewId);
-        return toResponse(review);
+        return reviewMapper.toResponse(review);
     }
 
     @Override
     public PageResponse<ReviewResponse> getProductReviews(Long productId, Pageable pageable) {
         Page<Review> page = reviewRepository.findByProductId(productId, pageable);
-        return PageResponse.of(page.map(this::toResponse));
+        return PageResponse.of(page.map(reviewMapper::toResponse));
     }
 
     @Override
     public PageResponse<ReviewResponse> getMemberReviews(Long memberId, Pageable pageable) {
         Page<Review> page = reviewRepository.findByMemberId(memberId, pageable);
-        return PageResponse.of(page.map(this::toResponse));
+        return PageResponse.of(page.map(reviewMapper::toResponse));
     }
 
     @Override
     public Page<ReviewResponse> getMyReviews(Long memberId, Pageable pageable) {
         return reviewRepository.findByMemberId(memberId, pageable)
-                .map(this::toResponse);
+                .map(reviewMapper::toResponse);
     }
 
     @Override
@@ -126,7 +128,7 @@ public class ReviewServiceImpl implements ReviewService {
         review.update(request.rating(), request.title(), request.content(), request.images());
 
         log.info("Review updated: id={}", reviewId);
-        return toResponse(review);
+        return reviewMapper.toResponse(review);
     }
 
     @Override
@@ -245,22 +247,5 @@ public class ReviewServiceImpl implements ReviewService {
             throw new InvalidStateException(ErrorCode.REVIEW_NOT_ALLOWED,
                     "You can only modify your own reviews");
         }
-    }
-
-    private ReviewResponse toResponse(Review review) {
-        return ReviewResponse.builder()
-                .id(review.getId())
-                .memberId(review.getMemberId())
-                .productId(review.getProductId())
-                .orderItemId(review.getOrderItemId())
-                .rating(review.getRating())
-                .title(review.getTitle())
-                .content(review.getContent())
-                .images(review.getImages())
-                .helpfulCount(review.getHelpfulCount())
-                .verified(review.isVerified())
-                .createdAt(review.getCreatedAt())
-                .updatedAt(review.getUpdatedAt())
-                .build();
     }
 }

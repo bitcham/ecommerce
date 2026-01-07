@@ -8,7 +8,6 @@ import platform.ecommerce.domain.order.Order;
 import platform.ecommerce.domain.order.OrderStatus;
 import platform.ecommerce.domain.order.PaymentMethod;
 import platform.ecommerce.domain.payment.Payment;
-import platform.ecommerce.dto.response.payment.PaymentResponse;
 import platform.ecommerce.exception.EntityNotFoundException;
 import platform.ecommerce.exception.ErrorCode;
 import platform.ecommerce.exception.InvalidStateException;
@@ -20,7 +19,8 @@ import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * Payment service implementation.
+ * Payment domain service implementation.
+ * Pure business logic - returns Payment entities.
  */
 @Slf4j
 @Service
@@ -34,7 +34,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional
-    public PaymentResponse requestPayment(Long orderId, PaymentMethod method) {
+    public Payment requestPayment(Long orderId, PaymentMethod method) {
         log.info("Requesting payment for order: orderId={}, method={}", orderId, method);
 
         Order order = findOrderById(orderId);
@@ -49,12 +49,12 @@ public class PaymentServiceImpl implements PaymentService {
         Payment savedPayment = paymentRepository.save(payment);
         log.info("Payment created: transactionId={}", savedPayment.getTransactionId());
 
-        return PaymentResponse.from(savedPayment);
+        return savedPayment;
     }
 
     @Override
     @Transactional
-    public PaymentResponse confirmPayment(String transactionId, BigDecimal amount) {
+    public Payment confirmPayment(String transactionId, BigDecimal amount) {
         log.info("Confirming payment: transactionId={}, amount={}", transactionId, amount);
 
         Payment payment = findPaymentByTransactionId(transactionId);
@@ -76,12 +76,12 @@ public class PaymentServiceImpl implements PaymentService {
             log.warn("Payment failed: transactionId={}, reason={}", transactionId, result.failReason());
         }
 
-        return PaymentResponse.from(payment);
+        return payment;
     }
 
     @Override
     @Transactional
-    public PaymentResponse cancelPayment(Long paymentId, Long memberId) {
+    public Payment cancelPayment(Long paymentId, Long memberId) {
         log.info("Cancelling payment: paymentId={}, memberId={}", paymentId, memberId);
 
         Payment payment = findPaymentById(paymentId);
@@ -100,24 +100,21 @@ public class PaymentServiceImpl implements PaymentService {
             throw new InvalidStateException(ErrorCode.REFUND_FAILED, result.failReason());
         }
 
-        return PaymentResponse.from(payment);
+        return payment;
     }
 
     @Override
-    public PaymentResponse getPayment(Long paymentId, Long memberId) {
+    public Payment getPayment(Long paymentId, Long memberId) {
         Payment payment = findPaymentById(paymentId);
         validatePaymentOwnershipOrAdmin(payment, memberId);
-        return PaymentResponse.from(payment);
+        return payment;
     }
 
     @Override
-    public List<PaymentResponse> getPaymentsByOrderId(Long orderId, Long memberId) {
+    public List<Payment> getPaymentsByOrderId(Long orderId, Long memberId) {
         Order order = findOrderById(orderId);
         validateOrderOwnershipOrAdmin(order, memberId);
-        return paymentRepository.findByOrderIdOrderByCreatedAtDesc(orderId)
-                .stream()
-                .map(PaymentResponse::from)
-                .toList();
+        return paymentRepository.findByOrderIdOrderByCreatedAtDesc(orderId);
     }
 
     // ========== Private Helper Methods ==========
