@@ -22,6 +22,7 @@ import platform.ecommerce.repository.review.SellerReplyHistoryRepository;
 import platform.ecommerce.repository.review.SellerReplyRepository;
 import platform.ecommerce.service.review.SellerReplyServiceImpl;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -78,6 +79,7 @@ class SellerReplyServiceTest {
         // Setup test product with seller
         testProduct = Product.builder()
                 .name("Test Product")
+                .basePrice(BigDecimal.valueOf(10000))
                 .sellerId(SELLER_ID)
                 .build();
         ReflectionTestUtils.setField(testProduct, "id", PRODUCT_ID);

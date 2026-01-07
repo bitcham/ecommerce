@@ -91,6 +91,11 @@ public enum ErrorCode {
     REVIEW_ALREADY_EXISTS(8502, HttpStatus.CONFLICT, "Review already exists for this order item"),
     REVIEW_NOT_ALLOWED(8503, HttpStatus.FORBIDDEN, "Review not allowed"),
 
+    // Seller Reply (855x)
+    SELLER_REPLY_NOT_FOUND(8551, HttpStatus.NOT_FOUND, "Seller reply not found"),
+    SELLER_REPLY_ALREADY_EXISTS(8552, HttpStatus.CONFLICT, "Seller reply already exists for this review"),
+    SELLER_REPLY_UNAUTHORIZED(8553, HttpStatus.FORBIDDEN, "Not authorized to modify this reply"),
+
     // Delivery (86xx)
     DELIVERY_NOT_FOUND(8601, HttpStatus.NOT_FOUND, "Delivery not found"),
 
